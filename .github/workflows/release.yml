@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build and sign (Apple Silicon)
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+        run: npm run tauri build -- --target aarch64-apple-darwin
+
+      - name: Build and sign (Intel)
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+        run: npm run tauri build -- --target x86_64-apple-darwin
+
+      - name: Create latest.json
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          cat > latest.json << EOF
+          {
+            "version": "$VERSION",
+            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "url": "https://github.com/${{ github.repository }}/releases/download/v$VERSION/Editor%20Workshop_${VERSION}_universal.dmg",
+            "signature": "$(cat src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg.sig)",
+            "notes": "See release notes at https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
+          }
+          EOF
+
+      - name: Create universal binary
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          # For now, just use the ARM version as universal
+          # (Creating true universal binaries requires lipo, which is complex for .dmg)
+          cp "src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Editor Workshop_${VERSION}_aarch64.dmg" \
+             "Editor Workshop_${VERSION}_universal.dmg"
+          cp "src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Editor Workshop_${VERSION}_aarch64.dmg.sig" \
+             "Editor Workshop_${VERSION}_universal.dmg.sig"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            Editor Workshop_*_universal.dmg
+            Editor Workshop_*_universal.dmg.sig
+            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg.sig
+            src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg.sig
+            latest.json
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
