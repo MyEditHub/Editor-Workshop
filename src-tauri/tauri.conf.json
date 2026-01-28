@@ -1,6 +1,6 @@
 {
   "productName": "Editor Workshop",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "identifier": "com.editors-workshop.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -43,10 +43,10 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://github.com/MyEditHub/editors-workshop/releases/latest/download/latest.json"
+        "https://github.com/MyEditHub/Editor-Workshop/releases/latest/download/latest.json"
       ],
       "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDlDNkNEN0JGOEFGMEQ0MjUKUldRbDFQQ0t2OWRzbklOa2pnZ01aR1RlOTkzUTYyOHBnN1FKWmF2UkdhZkpsN0Q0S3Jyelk1UWsK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDFBNTRDNjBFQ0FFMDAyOEQKUldTTkF1REtEc1pVR2p3NXVtVU9abjBwNmdRUngvZGd1emYvUVZ5Q3FlTmh0VXNQdWFvSERsN2gK"
     }
   }
 }
