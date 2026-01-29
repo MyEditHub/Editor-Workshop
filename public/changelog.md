@@ -12,6 +12,10 @@
 - Version bump to 0.1.5
 
 
+## [0.1.5] - 2026-01-29
+- Version bump to 0.1.5
+
+
 ## [0.1.5] - 2026-01-28
 - Version bump to 0.1.5
 
