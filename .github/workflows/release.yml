@@ -38,35 +38,58 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
         run: npm run tauri build -- --target x86_64-apple-darwin
 
-      - name: Create latest.json
+      - name: List build artifacts (debug)
+        run: |
+          echo "=== ARM64 DMG files ==="
+          ls -la src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/ || echo "No ARM64 dmg folder"
+          echo "=== x86_64 DMG files ==="
+          ls -la src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/ || echo "No x86_64 dmg folder"
+
+      - name: Create universal binary and latest.json
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
+
+          # Find the actual DMG files (Tauri 2 naming may vary)
+          ARM_DMG=$(find src-tauri/target/aarch64-apple-darwin/release/bundle/dmg -name "*.dmg" ! -name "*.sig" | head -1)
+          ARM_SIG=$(find src-tauri/target/aarch64-apple-darwin/release/bundle/dmg -name "*.dmg.sig" | head -1)
+
+          if [ -z "$ARM_DMG" ]; then
+            echo "ERROR: Could not find ARM64 DMG file"
+            exit 1
+          fi
+
+          echo "Found ARM DMG: $ARM_DMG"
+          echo "Found ARM SIG: $ARM_SIG"
+
+          # Copy as universal (using ARM version)
+          cp "$ARM_DMG" "Editor_Workshop_${VERSION}_universal.dmg"
+          if [ -n "$ARM_SIG" ]; then
+            cp "$ARM_SIG" "Editor_Workshop_${VERSION}_universal.dmg.sig"
+            SIGNATURE=$(cat "$ARM_SIG")
+          else
+            SIGNATURE=""
+          fi
+
+          # Create latest.json for auto-updater
           cat > latest.json << EOF
           {
             "version": "$VERSION",
             "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "url": "https://github.com/${{ github.repository }}/releases/download/v$VERSION/Editor%20Workshop_${VERSION}_universal.dmg",
-            "signature": "$(cat src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg.sig)",
+            "url": "https://github.com/${{ github.repository }}/releases/download/v$VERSION/Editor_Workshop_${VERSION}_universal.dmg",
+            "signature": "$SIGNATURE",
             "notes": "See release notes at https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
           }
           EOF
 
-      - name: Create universal binary
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          # For now, just use the ARM version as universal
-          # (Creating true universal binaries requires lipo, which is complex for .dmg)
-          cp "src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Editor Workshop_${VERSION}_aarch64.dmg" \
-             "Editor Workshop_${VERSION}_universal.dmg"
-          cp "src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Editor Workshop_${VERSION}_aarch64.dmg.sig" \
-             "Editor Workshop_${VERSION}_universal.dmg.sig"
+          echo "=== Created files ==="
+          ls -la Editor_Workshop_* latest.json
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            Editor Workshop_*_universal.dmg
-            Editor Workshop_*_universal.dmg.sig
+            Editor_Workshop_*_universal.dmg
+            Editor_Workshop_*_universal.dmg.sig
             src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
             src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg.sig
             src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
