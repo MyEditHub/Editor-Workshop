@@ -79,7 +79,7 @@ if [ -f "CHANGELOG.md" ]; then
 fi
 
 # Regenerate Cargo.lock
-cd src-tauri && cargo update -p editor-workshop && cd ..
+cd src-tauri && cargo update -p editors-workshop && cd ..
 
 echo "✅ Successfully updated to version $NEW_VERSION"
 echo ""
