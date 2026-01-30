@@ -39,7 +39,8 @@ jobs:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
         run: |
           # Decode base64 key to temp file (key is stored base64-encoded)
-          echo "$TAURI_PRIVATE_KEY" | base64 -d > /tmp/private.key
+          # macOS uses -D for decode, Linux uses -d
+          echo "$TAURI_PRIVATE_KEY" | base64 -D > /tmp/private.key
 
           # Find and sign DMG files
           for dmg in src-tauri/target/*/release/bundle/dmg/*.dmg; do
