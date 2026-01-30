@@ -38,9 +38,17 @@ jobs:
         env:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
         run: |
-          # Decode base64 key to temp file (key is stored base64-encoded)
-          # macOS uses -D for decode, Linux uses -d
-          echo "$TAURI_PRIVATE_KEY" | base64 -D > /tmp/private.key
+          # Debug: show key length and first few chars
+          echo "Key length: ${#TAURI_PRIVATE_KEY}"
+          echo "Key starts with: ${TAURI_PRIVATE_KEY:0:30}..."
+
+          # Write key directly to file (it should already be in minisign format)
+          printf '%s' "$TAURI_PRIVATE_KEY" > /tmp/private.key
+
+          # Debug: show file info
+          echo "File size: $(wc -c < /tmp/private.key)"
+          echo "File lines: $(wc -l < /tmp/private.key)"
+          echo "First 50 chars: $(head -c 50 /tmp/private.key)"
 
           # Find and sign DMG files
           for dmg in src-tauri/target/*/release/bundle/dmg/*.dmg; do
