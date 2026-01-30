@@ -38,13 +38,19 @@ jobs:
         env:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
         run: |
+          # Debug: show raw secret info
+          echo "Raw secret length: ${#TAURI_PRIVATE_KEY}"
+          echo "Raw secret first 40: ${TAURI_PRIVATE_KEY:0:40}"
+
           # Decode base64 key to temp file
           echo "$TAURI_PRIVATE_KEY" | base64 --decode > /tmp/private.key
 
           # Debug: verify decoded file
           echo "Decoded file size: $(wc -c < /tmp/private.key)"
           echo "Decoded file lines: $(wc -l < /tmp/private.key)"
-          echo "First line starts with: $(head -1 /tmp/private.key | cut -c1-30)"
+          echo "Line 1: $(head -1 /tmp/private.key)"
+          echo "Line 2 first 30: $(tail -1 /tmp/private.key | head -c 30)"
+          echo "Line 2 chars 10-15: $(tail -1 /tmp/private.key | cut -c10-15)"
 
           # Find and sign DMG files
           for dmg in src-tauri/target/*/release/bundle/dmg/*.dmg; do
