@@ -9,119 +9,44 @@ jobs:
   release:
     permissions:
       contents: write
-    runs-on: macos-latest
-    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: --target aarch64-apple-darwin
+          - platform: macos-latest
+            args: --target x86_64-apple-darwin
+
+    runs-on: ${{ matrix.platform }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
-      
+
       - name: Install dependencies
         run: npm install
-      
-      - name: Build (Apple Silicon)
-        run: npm run tauri build -- --target aarch64-apple-darwin
 
-      - name: Build (Intel)
-        run: npm run tauri build -- --target x86_64-apple-darwin
-
-      - name: Sign bundles
-        env:
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-        run: |
-          # Debug: show raw secret info
-          echo "Raw secret length: ${#TAURI_PRIVATE_KEY}"
-          echo "Raw secret first 40: ${TAURI_PRIVATE_KEY:0:40}"
-
-          # Decode base64 key to temp file
-          echo "$TAURI_PRIVATE_KEY" | base64 --decode > /tmp/private.key
-
-          # Debug: verify decoded file
-          echo "Decoded file size: $(wc -c < /tmp/private.key)"
-          echo "Decoded file lines: $(wc -l < /tmp/private.key)"
-          echo "Line 1: $(head -1 /tmp/private.key)"
-          echo "Line 2 first 30: $(tail -1 /tmp/private.key | head -c 30)"
-          echo "Line 2 chars 10-15: $(tail -1 /tmp/private.key | cut -c10-15)"
-
-          # Find and sign DMG files
-          for dmg in src-tauri/target/*/release/bundle/dmg/*.dmg; do
-            echo "Signing: $dmg"
-            npx @tauri-apps/cli signer sign -k /tmp/private.key "$dmg"
-          done
-
-          # Clean up
-          rm /tmp/private.key
-
-          # Verify signatures exist
-          echo "=== Generated signature files ==="
-          find src-tauri/target -name "*.dmg.sig" -ls
-      
-      - name: Create universal binary and latest.json
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          
-          # Find the actual DMG files
-          ARM_DMG=$(find src-tauri/target/aarch64-apple-darwin/release/bundle/dmg -name "*.dmg" ! -name "*.sig" | head -1)
-          ARM_SIG=$(find src-tauri/target/aarch64-apple-darwin/release/bundle/dmg -name "*.dmg.sig" | head -1)
-          
-          if [ -z "$ARM_DMG" ]; then
-            echo "ERROR: Could not find ARM64 DMG file"
-            exit 1
-          fi
-          
-          if [ -z "$ARM_SIG" ]; then
-            echo "ERROR: Could not find ARM64 signature file"
-            exit 1
-          fi
-          
-          echo "Found ARM DMG: $ARM_DMG"
-          echo "Found ARM SIG: $ARM_SIG"
-          
-          # Copy as universal (using ARM version)
-          cp "$ARM_DMG" "Editor_Workshop_${VERSION}_universal.dmg"
-          cp "$ARM_SIG" "Editor_Workshop_${VERSION}_universal.dmg.sig"
-          
-          # Read signature
-          SIGNATURE=$(cat "$ARM_SIG")
-          
-          # Create latest.json for auto-updater
-          cat > latest.json << EOF
-          {
-            "version": "$VERSION",
-            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "url": "https://github.com/${{ github.repository }}/releases/download/v$VERSION/Editor_Workshop_${VERSION}_universal.dmg",
-            "signature": "$SIGNATURE",
-            "notes": "See release notes at https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
-          }
-          EOF
-          
-          echo "=== Created files ==="
-          ls -la Editor_Workshop_* latest.json
-          
-          echo "=== latest.json content ==="
-          cat latest.json
-      
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            Editor_Workshop_*_universal.dmg
-            Editor_Workshop_*_universal.dmg.sig
-            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
-            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg.sig
-            src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
-            src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg.sig
-            latest.json
-          draft: false
-          prerelease: false
+      - name: Build and release
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+        with:
+          tagName: v__VERSION__
+          releaseName: 'Editor Workshop v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
