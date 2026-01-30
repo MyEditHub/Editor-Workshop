@@ -34,10 +34,6 @@ target/
 *.dmg
 *.app
 
-# Claude artifacts
-.claude/
-CLAUDE.md
-
-# Claude artifacts
+# Claude Code files (local only)
 .claude/
 CLAUDE.md
