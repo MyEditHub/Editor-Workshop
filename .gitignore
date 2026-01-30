@@ -26,3 +26,14 @@ dist-ssr
 .tauri/
 *.key
 .tauri/
+
+# Tauri/Rust build outputs
+target/
+
+# Build artifacts
+*.dmg
+*.app
+
+# Claude artifacts
+.claude/
+CLAUDE.md
