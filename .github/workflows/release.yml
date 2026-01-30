@@ -28,17 +28,31 @@ jobs:
       - name: Install dependencies
         run: npm install
       
-      - name: Build and Sign (Apple Silicon)
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+      - name: Build (Apple Silicon)
         run: npm run tauri build -- --target aarch64-apple-darwin
 
-      - name: Build and Sign (Intel)
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+      - name: Build (Intel)
         run: npm run tauri build -- --target x86_64-apple-darwin
+
+      - name: Sign bundles
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+        run: |
+          # Write key to temp file
+          echo "$TAURI_PRIVATE_KEY" > /tmp/private.key
+
+          # Find and sign DMG files
+          for dmg in src-tauri/target/*/release/bundle/dmg/*.dmg; do
+            echo "Signing: $dmg"
+            npx @tauri-apps/cli signer sign -k /tmp/private.key "$dmg"
+          done
+
+          # Clean up
+          rm /tmp/private.key
+
+          # Verify signatures exist
+          echo "=== Generated signature files ==="
+          find src-tauri/target -name "*.dmg.sig" -ls
       
       - name: Create universal binary and latest.json
         run: |
