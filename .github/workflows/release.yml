@@ -28,27 +28,15 @@ jobs:
       - name: Install dependencies
         run: npm install
       
-      - name: Build (Apple Silicon)
+      - name: Build and Sign (Apple Silicon)
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
         run: npm run tauri build -- --target aarch64-apple-darwin
-      
-      - name: Sign DMG (Apple Silicon)
+
+      - name: Build and Sign (Intel)
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          npx @tauri-apps/cli signer sign \
-            "src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Editor Workshop_${VERSION}_aarch64.dmg"
-      
-      - name: Build (Intel)
         run: npm run tauri build -- --target x86_64-apple-darwin
-      
-      - name: Sign DMG (Intel)
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          npx @tauri-apps/cli signer sign \
-            "src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/Editor Workshop_${VERSION}_x86_64.dmg"
       
       - name: Create universal binary and latest.json
         run: |
