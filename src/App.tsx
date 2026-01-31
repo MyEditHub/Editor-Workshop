@@ -80,7 +80,7 @@ function App() {
             <div className="settings-content">
               <div className="settings-section">
                 ƒ<h3>About</h3>
-                <p>Editor Workshop v0.1.5</p>
+                <p>Editor Workshop v0.1.6</p>
                 <p>Professional tools for video editors</p>
                 <button
                   className="changelog-button"
@@ -141,7 +141,7 @@ function App() {
                     margin: 0,
                   }}
                 >
-                  v0.1.5
+                  v0.1.6
                 </p>
               </div>
             </div>
