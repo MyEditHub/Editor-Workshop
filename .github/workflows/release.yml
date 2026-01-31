@@ -37,17 +37,18 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Write signing key to file
+      - name: Decode signing key
         run: |
           echo "${{ secrets.TAURI_PRIVATE_KEY }}" | base64 --decode > /tmp/tauri.key
-          chmod 600 /tmp/tauri.key
+          echo "TAURI_SIGNING_PRIVATE_KEY<<KEYEOF" >> $GITHUB_ENV
+          cat /tmp/tauri.key >> $GITHUB_ENV
+          echo "KEYEOF" >> $GITHUB_ENV
 
       - name: Build and release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_PRIVATE_KEY_PATH: /tmp/tauri.key
-          TAURI_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_PRIVATE_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__
           releaseName: 'Editor Workshop v__VERSION__'
