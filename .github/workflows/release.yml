@@ -63,26 +63,27 @@ jobs:
           TARBALL=$(find src-tauri/target -name "*.app.tar.gz" | head -1)
           SIG=$(find src-tauri/target -name "*.app.tar.gz.sig" | head -1)
 
-          mkdir -p dist
+          mkdir -p artifacts
 
           # Copy with architecture-specific names
           if [ -f "$DMG" ]; then
-            cp "$DMG" "dist/Editor.Workshop_${VERSION}_${{ matrix.arch }}.dmg"
+            cp "$DMG" "artifacts/Editor.Workshop_${VERSION}_${{ matrix.arch }}.dmg"
           fi
           if [ -f "$TARBALL" ]; then
-            cp "$TARBALL" "dist/Editor.Workshop_${VERSION}_${{ matrix.arch }}.app.tar.gz"
+            cp "$TARBALL" "artifacts/Editor.Workshop_${VERSION}_${{ matrix.arch }}.app.tar.gz"
           fi
           if [ -f "$SIG" ]; then
-            cp "$SIG" "dist/Editor.Workshop_${VERSION}_${{ matrix.arch }}.app.tar.gz.sig"
+            cp "$SIG" "artifacts/Editor.Workshop_${VERSION}_${{ matrix.arch }}.app.tar.gz.sig"
           fi
 
-          ls -la dist/
+          ls -la artifacts/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-${{ matrix.arch }}
-          path: dist/*
+          path: artifacts/*
+          compression-level: 0
 
   publish:
     needs: build
@@ -94,28 +95,28 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: macos-arm64
-          path: dist
+          path: release
 
       - name: Download x64 artifacts
         uses: actions/download-artifact@v4
         with:
           name: macos-x64
-          path: dist
+          path: release
 
       - name: Get version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: List artifacts
-        run: ls -la dist/
+        run: ls -la release/
 
       - name: Create latest.json
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
-          ARM64_SIG=$(cat dist/*_arm64.app.tar.gz.sig)
-          X64_SIG=$(cat dist/*_x64.app.tar.gz.sig)
+          ARM64_SIG=$(cat release/*_arm64.app.tar.gz.sig)
+          X64_SIG=$(cat release/*_x64.app.tar.gz.sig)
 
-          cat > dist/latest.json << EOF
+          cat > release/latest.json << EOF
           {
             "version": "${VERSION}",
             "notes": "See the assets to download this version and install.",
@@ -132,13 +133,13 @@ jobs:
             }
           }
           EOF
-          cat dist/latest.json
+          cat release/latest.json
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           name: 'Editor Workshop v${{ steps.version.outputs.VERSION }}'
           body: 'See the assets to download this version and install.'
-          files: dist/*
+          files: release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
