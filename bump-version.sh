@@ -1,15 +1,46 @@
 #!/bin/bash
 
-# Check for --release flag
+# Check for flags
 RELEASE=false
+RETAG=false
 VERSION_ARG=""
 for arg in "$@"; do
   if [ "$arg" = "--release" ]; then
     RELEASE=true
+  elif [ "$arg" = "--retag" ]; then
+    RETAG=true
   else
     VERSION_ARG="$arg"
   fi
 done
+
+# Handle --retag flag (re-release same version without bumping)
+if [ "$RETAG" = true ]; then
+  CURRENT_VERSION=$(node -p "require('./package.json').version")
+  TAG="v$CURRENT_VERSION"
+
+  echo "🔄 Re-tagging $TAG..."
+
+  # Delete local tag if exists
+  if git tag -l | grep -q "^$TAG$"; then
+    git tag -d "$TAG"
+    echo "  Deleted local tag"
+  fi
+
+  # Delete remote tag if exists
+  if git ls-remote --tags origin | grep -q "refs/tags/$TAG"; then
+    git push origin ":refs/tags/$TAG"
+    echo "  Deleted remote tag"
+  fi
+
+  # Create and push new tag
+  git tag "$TAG"
+  git push origin "$TAG"
+
+  echo ""
+  echo "🚀 Re-tagged $TAG! Build triggered on GitHub Actions."
+  exit 0
+fi
 
 # Get current version from package.json
 CURRENT_VERSION=$(node -p "require('./package.json').version")
@@ -130,3 +161,4 @@ else
   echo ""
   echo "Or run with --release to automate: ./bump-version.sh $VERSION_ARG --release"
 fi
+
