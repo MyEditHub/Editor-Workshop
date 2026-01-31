@@ -37,11 +37,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Decode signing key
+      - name: Decrypt signing key
         run: |
-          echo "${{ secrets.TAURI_PRIVATE_KEY }}" | base64 --decode > /tmp/tauri.key
+          gpg --quiet --batch --yes --decrypt \
+            --passphrase="${{ secrets.GPG_PASSPHRASE }}" \
+            --output /tmp/signing.key \
+            .github/signing.key.gpg
+
+      - name: Set signing key environment variable
+        run: |
           echo "TAURI_SIGNING_PRIVATE_KEY<<KEYEOF" >> $GITHUB_ENV
-          cat /tmp/tauri.key >> $GITHUB_ENV
+          cat /tmp/signing.key >> $GITHUB_ENV
           echo "KEYEOF" >> $GITHUB_ENV
 
       - name: Build and release
