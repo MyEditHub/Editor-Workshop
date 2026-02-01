@@ -186,6 +186,19 @@ jobs:
             | **Apple Silicon** (M1/M2/M3/M4) | [Download](https://github.com/MyEditHub/Editor-Workshop/releases/download/v${{ steps.version.outputs.VERSION }}/Editor.Workshop_${{ steps.version.outputs.VERSION }}_arm64.pkg) |
             | **Intel** | [Download](https://github.com/MyEditHub/Editor-Workshop/releases/download/v${{ steps.version.outputs.VERSION }}/Editor.Workshop_${{ steps.version.outputs.VERSION }}_x64.pkg) |
 
-            **Installation:** Double-click the `.pkg` file and follow the installer prompts.
+            ---
+
+            ## Installation Guide
+
+            macOS will block the app because it's from an independent developer. Follow these steps:
+
+            1. **Download** the `.pkg` file above
+            2. **Double-click** to open it — macOS will show a security warning
+            3. **Open System Settings** → **Privacy & Security**
+            4. **Scroll down** — you'll see *"Editor Workshop was blocked"*
+            5. **Click "Open Anyway"** → enter your password
+            6. **Run the installer** again — it will now work
+
+            After this one-time setup, the app opens normally.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
