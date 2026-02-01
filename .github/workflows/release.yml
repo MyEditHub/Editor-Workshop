@@ -59,17 +59,12 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
           # Find the built files
-          DMG=$(find src-tauri/target -name "*.dmg" | head -1)
+          APP=$(find src-tauri/target -name "*.app" -type d | head -1)
           TARBALL=$(find src-tauri/target -name "*.app.tar.gz" | head -1)
           SIG=$(find src-tauri/target -name "*.app.tar.gz.sig" | head -1)
 
           mkdir -p artifacts/release
           mkdir -p artifacts/updater
-
-          # DMGs go to release (for users)
-          if [ -f "$DMG" ]; then
-            cp "$DMG" "artifacts/release/Editor.Workshop_${VERSION}_${{ matrix.arch }}.dmg"
-          fi
 
           # Updater files go to gh-pages
           if [ -f "$TARBALL" ]; then
@@ -79,14 +74,37 @@ jobs:
             cp "$SIG" "artifacts/updater/Editor.Workshop_${VERSION}_${{ matrix.arch }}.app.tar.gz.sig"
           fi
 
-          ls -la artifacts/release/
           ls -la artifacts/updater/
 
-      # Upload DMG directly to release (bypasses artifact compression)
-      - name: Upload DMG to Release
+      - name: Create PKG installer
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          APP=$(find src-tauri/target -name "*.app" -type d | head -1)
+
+          # Make postinstall script executable
+          chmod +x .github/scripts/postinstall
+
+          # Create scripts directory for pkgbuild
+          mkdir -p /tmp/pkg-scripts
+          cp .github/scripts/postinstall /tmp/pkg-scripts/
+
+          # Create component package
+          pkgbuild \
+            --root "$(dirname "$APP")" \
+            --component-plist /dev/null \
+            --install-location /Applications \
+            --scripts /tmp/pkg-scripts \
+            --identifier com.editors-workshop.app \
+            --version "$VERSION" \
+            "artifacts/release/Editor.Workshop_${VERSION}_${{ matrix.arch }}.pkg"
+
+          ls -la artifacts/release/
+
+      # Upload PKG directly to release
+      - name: Upload PKG to Release
         uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/release/*.dmg
+          files: artifacts/release/*.pkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -165,12 +183,9 @@ jobs:
 
             | Mac Type | Download |
             |----------|----------|
-            | **Apple Silicon** (M1/M2/M3/M4) | [Download](https://github.com/MyEditHub/Editor-Workshop/releases/download/v${{ steps.version.outputs.VERSION }}/Editor.Workshop_${{ steps.version.outputs.VERSION }}_arm64.dmg) |
-            | **Intel** | [Download](https://github.com/MyEditHub/Editor-Workshop/releases/download/v${{ steps.version.outputs.VERSION }}/Editor.Workshop_${{ steps.version.outputs.VERSION }}_x64.dmg) |
+            | **Apple Silicon** (M1/M2/M3/M4) | [Download](https://github.com/MyEditHub/Editor-Workshop/releases/download/v${{ steps.version.outputs.VERSION }}/Editor.Workshop_${{ steps.version.outputs.VERSION }}_arm64.pkg) |
+            | **Intel** | [Download](https://github.com/MyEditHub/Editor-Workshop/releases/download/v${{ steps.version.outputs.VERSION }}/Editor.Workshop_${{ steps.version.outputs.VERSION }}_x64.pkg) |
 
-            > **Note:** If macOS says the app is damaged, run this in Terminal:
-            > ```
-            > xattr -cr ~/Downloads/Editor.Workshop_*.dmg
-            > ```
+            **Installation:** Double-click the `.pkg` file and follow the installer prompts.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

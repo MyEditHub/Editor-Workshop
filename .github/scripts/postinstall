@@ -1,0 +1,4 @@
+#!/bin/bash
+# Remove quarantine attribute so app opens without Gatekeeper warning
+xattr -cr "/Applications/Editor Workshop.app"
+exit 0
