@@ -1,0 +1,15 @@
+{
+  "version": "0.1.6",
+  "notes": "See the assets to download this version and install.",
+  "pub_date": "2026-02-01T00:12:50Z",
+  "platforms": {
+    "darwin-aarch64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T25wMlUyOExOZlNPcFR4QklXZWozTktCNG5zeGRWbWRXY0hLZFZaU3VkVkhyVG5lczQ0ZXAzSUh0QWk1czg2LzNBeTdQSkJnSjIrdFpmN2JTNlgrRVFvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzY5OTA0NzU5CWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKWnlTdURWOCtXTDRmcERjM2hKMFQyR2NvZVBOTUpjeXZJREJrWEpFUFQ2T3VNbmxmTEM2d2xVL250cHA5SGJ0cjIvRTNhM3FXUGhuZit1ZEowOGRIRFE9PQo=",
+      "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.1.6_arm64.app.tar.gz"
+    },
+    "darwin-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T3FFSW1ycXV0ZDlCS2x1NDVKRkZZS0didk52TmFBdzJBemNFZEUzcStLcGlUQ0ZXSXBNTFVTU2tQejFzWWJYQVU1aUNrY0U3aCt4QXR4dW5lN3NXZGdrPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzY5OTA0NzQ1CWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKZ3JhYVNDa0p2M3R6SkZFRGo4TG15dWVycDZscm05REtyUzUyaUNLQVgzcjBSaU5YbjFwd3VRU3FDMitVaVU2Q1h2NjNYZUMvQ3N2b0k2NmwwRmtoQkE9PQo=",
+      "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.1.6_x64.app.tar.gz"
+    }
+  }
+}
