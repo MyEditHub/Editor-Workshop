@@ -1,14 +1,14 @@
 {
   "version": "0.1.6",
   "notes": "See the assets to download this version and install.",
-  "pub_date": "2026-02-01T09:43:47Z",
+  "pub_date": "2026-02-01T15:57:49Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T2xYRkZTTFdKMkl2VUpvVkZKdlZlenpoRjZnTXhUbEY3UVAxQ2FyM1p0V3BuRXAxZXJEWWtZTXpFRUMvbHNQSGZVbDFMQnJURWMzRXdvZHV1VjhaYkFnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzY5OTM4ODA5CWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKNi91UzY5NXpHdlVTekIyT0FBUjlsaVdEOEQxVURFVjhjbDJOVnY2WFU4TnoxOTlMZ1lEcU1JVWdFNkJCQjFGbDhuc3ZWb0Vjb2lyR2J6eVlTWFRUQWc9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T244ZXFSTldzMmxvZUdqaDIyYy8vcjlYTlBwTExtang5K2w1TVZIZUtpSmp5UlJHN2pGeFJsaG5oUmNyR1dyRkhSZ0h3UXNySjFISUp4aWkrenU3VFFrPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzY5OTYxNDI3CWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKQzNWWXlBZ0paMjRJd2hMeitmM2hwc0FTT0JVd09YYkJJTXRxZFN2ais1V0NMbFFlaDltK3lTYjNndGdvSGROc0psK05NNEFxekxrek5vVE9rRUNwQ2c9PQo=",
       "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.1.6_arm64.app.tar.gz"
     },
     "darwin-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T2dUU3JRcnByRzhOSXUvQjU1V2hvQlVuNWhrTnZETFRvdlJxVjBqOEVFcFcwYUV3Q0FCR3ZMb1dPcHE2YndvK2pycGs3aGVsb0xjaWkzNVEvTXRSZndBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzY5OTM5MDExCWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKcEgwVC8rWjBhbEM0VHFLY0Rja3I0R0tWVzAyMitEOGl6YnU0elFrdFdNMVYydUtQWDRMWDUxZkZIaEhaUXFzdGdrNXd4NXdNcDRROG1jS1hLSTYyQUE9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T3U4SURuV1JXSzZZVXlSWkFyMHhvNHBSL2Mrb0dZUXFRWWFlUnVNZFNqam5USHlldGFsR0ZkUmpFeGZVT3dhd2toV3llNFFXTXlHeDRUZEQ4NFlyTUE4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzY5OTYxNDUyCWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKYmJlTUhnbTdWZVhhdCtBZkx4VU5nNjFvVG1URnRQcXlqOHZlc2FnZzVjOWVhRXozVEdZeG9Na3prRUVsMk1lVEdJNmFFUXNGVmJDU0p5TVJZektiQkE9PQo=",
       "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.1.6_x64.app.tar.gz"
     }
   }
