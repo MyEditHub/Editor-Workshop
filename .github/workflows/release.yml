@@ -82,13 +82,15 @@ jobs:
           ls -la artifacts/release/
           ls -la artifacts/updater/
 
-      - name: Upload release artifacts
-        uses: actions/upload-artifact@v4
+      # Upload DMG directly to release (bypasses artifact compression)
+      - name: Upload DMG to Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: release-${{ matrix.arch }}
-          path: artifacts/release/*
-          compression-level: 0
+          files: artifacts/release/*.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Updater files still go through artifacts for gh-pages deployment
       - name: Upload updater artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -106,13 +108,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download release artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: release-*
-          path: release
-          merge-multiple: true
-
       - name: Download updater artifacts
         uses: actions/download-artifact@v4
         with:
@@ -124,10 +119,8 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      - name: List artifacts
+      - name: List updater files
         run: |
-          echo "Release files:"
-          ls -la release/
           echo "Updater files:"
           ls -la updater/
 
@@ -163,7 +156,7 @@ jobs:
           publish_dir: ./updater
           keep_files: true
 
-      - name: Create GitHub Release
+      - name: Update Release description
         uses: softprops/action-gh-release@v1
         with:
           name: 'Editor Workshop v${{ steps.version.outputs.VERSION }}'
@@ -179,6 +172,5 @@ jobs:
             > ```
             > xattr -cr ~/Downloads/Editor.Workshop_*.dmg
             > ```
-          files: release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
