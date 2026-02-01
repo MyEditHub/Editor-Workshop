@@ -80,6 +80,7 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           APP=$(find src-tauri/target -name "*.app" -type d | head -1)
+          echo "Found app: $APP"
 
           # Make postinstall script executable
           chmod +x .github/scripts/postinstall
@@ -88,10 +89,9 @@ jobs:
           mkdir -p /tmp/pkg-scripts
           cp .github/scripts/postinstall /tmp/pkg-scripts/
 
-          # Create component package
+          # Create PKG using --component (for .app bundles)
           pkgbuild \
-            --root "$(dirname "$APP")" \
-            --component-plist /dev/null \
+            --component "$APP" \
             --install-location /Applications \
             --scripts /tmp/pkg-scripts \
             --identifier com.editors-workshop.app \
