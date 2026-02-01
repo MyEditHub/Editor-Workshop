@@ -139,7 +139,25 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: 'Editor Workshop v${{ steps.version.outputs.VERSION }}'
-          body: 'See the assets to download this version and install.'
+          body: |
+            ## Download
+
+            | Mac Type | Download |
+            |----------|----------|
+            | **Apple Silicon** (M1/M2/M3/M4) | [Editor.Workshop_${{ steps.version.outputs.VERSION }}_arm64.dmg](https://github.com/MyEditHub/Editor-Workshop/releases/download/v${{ steps.version.outputs.VERSION }}/Editor.Workshop_${{ steps.version.outputs.VERSION }}_arm64.dmg) |
+            | **Intel** | [Editor.Workshop_${{ steps.version.outputs.VERSION }}_x64.dmg](https://github.com/MyEditHub/Editor-Workshop/releases/download/v${{ steps.version.outputs.VERSION }}/Editor.Workshop_${{ steps.version.outputs.VERSION }}_x64.dmg) |
+
+            > **Note:** If macOS says the app is damaged, run this in Terminal:
+            > ```
+            > xattr -cr ~/Downloads/Editor.Workshop_*.dmg
+            > ```
+
+            ---
+            <details>
+            <summary>Other files (for auto-updates)</summary>
+
+            The `.app.tar.gz`, `.sig`, and `latest.json` files are used by the auto-updater. You don't need to download these manually.
+            </details>
           files: release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
