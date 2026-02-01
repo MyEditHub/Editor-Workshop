@@ -79,7 +79,7 @@ function App() {
             </div>
             <div className="settings-content">
               <div className="settings-section">
-                ƒ<h3>About</h3>
+                <h3>About</h3>
                 <p>Editor Workshop v0.1.6</p>
                 <p>Professional tools for video editors</p>
                 <button

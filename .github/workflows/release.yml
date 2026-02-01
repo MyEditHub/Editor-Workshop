@@ -63,26 +63,37 @@ jobs:
           TARBALL=$(find src-tauri/target -name "*.app.tar.gz" | head -1)
           SIG=$(find src-tauri/target -name "*.app.tar.gz.sig" | head -1)
 
-          mkdir -p artifacts
+          mkdir -p artifacts/release
+          mkdir -p artifacts/updater
 
-          # Copy with architecture-specific names
+          # DMGs go to release (for users)
           if [ -f "$DMG" ]; then
-            cp "$DMG" "artifacts/Editor.Workshop_${VERSION}_${{ matrix.arch }}.dmg"
+            cp "$DMG" "artifacts/release/Editor.Workshop_${VERSION}_${{ matrix.arch }}.dmg"
           fi
+
+          # Updater files go to gh-pages
           if [ -f "$TARBALL" ]; then
-            cp "$TARBALL" "artifacts/Editor.Workshop_${VERSION}_${{ matrix.arch }}.app.tar.gz"
+            cp "$TARBALL" "artifacts/updater/Editor.Workshop_${VERSION}_${{ matrix.arch }}.app.tar.gz"
           fi
           if [ -f "$SIG" ]; then
-            cp "$SIG" "artifacts/Editor.Workshop_${VERSION}_${{ matrix.arch }}.app.tar.gz.sig"
+            cp "$SIG" "artifacts/updater/Editor.Workshop_${VERSION}_${{ matrix.arch }}.app.tar.gz.sig"
           fi
 
-          ls -la artifacts/
+          ls -la artifacts/release/
+          ls -la artifacts/updater/
 
-      - name: Upload artifacts
+      - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macos-${{ matrix.arch }}
-          path: artifacts/*
+          name: release-${{ matrix.arch }}
+          path: artifacts/release/*
+          compression-level: 0
+
+      - name: Upload updater artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: updater-${{ matrix.arch }}
+          path: artifacts/updater/*
           compression-level: 0
 
   publish:
@@ -90,33 +101,43 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pages: write
     steps:
-      - name: Download ARM64 artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: macos-arm64
-          path: release
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Download x64 artifacts
+      - name: Download release artifacts
         uses: actions/download-artifact@v4
         with:
-          name: macos-x64
+          pattern: release-*
           path: release
+          merge-multiple: true
+
+      - name: Download updater artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: updater-*
+          path: updater
+          merge-multiple: true
 
       - name: Get version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: List artifacts
-        run: ls -la release/
+        run: |
+          echo "Release files:"
+          ls -la release/
+          echo "Updater files:"
+          ls -la updater/
 
       - name: Create latest.json
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
-          ARM64_SIG=$(cat release/*_arm64.app.tar.gz.sig)
-          X64_SIG=$(cat release/*_x64.app.tar.gz.sig)
+          ARM64_SIG=$(cat updater/*_arm64.app.tar.gz.sig)
+          X64_SIG=$(cat updater/*_x64.app.tar.gz.sig)
 
-          cat > release/latest.json << EOF
+          cat > updater/latest.json << EOF
           {
             "version": "${VERSION}",
             "notes": "See the assets to download this version and install.",
@@ -124,16 +145,23 @@ jobs:
             "platforms": {
               "darwin-aarch64": {
                 "signature": "${ARM64_SIG}",
-                "url": "https://github.com/MyEditHub/Editor-Workshop/releases/download/v${VERSION}/Editor.Workshop_${VERSION}_arm64.app.tar.gz"
+                "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_${VERSION}_arm64.app.tar.gz"
               },
               "darwin-x86_64": {
                 "signature": "${X64_SIG}",
-                "url": "https://github.com/MyEditHub/Editor-Workshop/releases/download/v${VERSION}/Editor.Workshop_${VERSION}_x64.app.tar.gz"
+                "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_${VERSION}_x64.app.tar.gz"
               }
             }
           }
           EOF
-          cat release/latest.json
+          cat updater/latest.json
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./updater
+          keep_files: true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -144,20 +172,13 @@ jobs:
 
             | Mac Type | Download |
             |----------|----------|
-            | **Apple Silicon** (M1/M2/M3/M4) | [Editor.Workshop_${{ steps.version.outputs.VERSION }}_arm64.dmg](https://github.com/MyEditHub/Editor-Workshop/releases/download/v${{ steps.version.outputs.VERSION }}/Editor.Workshop_${{ steps.version.outputs.VERSION }}_arm64.dmg) |
-            | **Intel** | [Editor.Workshop_${{ steps.version.outputs.VERSION }}_x64.dmg](https://github.com/MyEditHub/Editor-Workshop/releases/download/v${{ steps.version.outputs.VERSION }}/Editor.Workshop_${{ steps.version.outputs.VERSION }}_x64.dmg) |
+            | **Apple Silicon** (M1/M2/M3/M4) | [Download](https://github.com/MyEditHub/Editor-Workshop/releases/download/v${{ steps.version.outputs.VERSION }}/Editor.Workshop_${{ steps.version.outputs.VERSION }}_arm64.dmg) |
+            | **Intel** | [Download](https://github.com/MyEditHub/Editor-Workshop/releases/download/v${{ steps.version.outputs.VERSION }}/Editor.Workshop_${{ steps.version.outputs.VERSION }}_x64.dmg) |
 
             > **Note:** If macOS says the app is damaged, run this in Terminal:
             > ```
             > xattr -cr ~/Downloads/Editor.Workshop_*.dmg
             > ```
-
-            ---
-            <details>
-            <summary>Other files (for auto-updates)</summary>
-
-            The `.app.tar.gz`, `.sig`, and `latest.json` files are used by the auto-updater. You don't need to download these manually.
-            </details>
           files: release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
