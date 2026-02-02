@@ -88,7 +88,7 @@ const Dashboard = ({ lifetimeCount }: DashboardProps) => {
       </section>
 
       <footer style={{ textAlign: 'center', marginTop: '32px', color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>
-        v0.2.0
+        v0.3.0
       </footer>
     </div>
   );

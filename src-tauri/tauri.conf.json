@@ -1,6 +1,6 @@
 {
   "productName": "Editor Workshop",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "identifier": "com.editors-workshop.app",
   "build": {
     "beforeDevCommand": "npm run dev",
