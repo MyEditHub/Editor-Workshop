@@ -13,7 +13,7 @@ A Toolbox for video editors. Save time and streamline your workflow.
 
 ## 📥 Download
 
-**Latest Release:** [v0.3.0](https://github.com/MyEdithub/Editor-workshop/releases/tag/v0.3.0)
+**Latest Release:** [v0.3.1](https://github.com/MyEdithub/Editor-workshop/releases/tag/v0.3.1)
 
 ### System Requirements
 - macOS 10.15 (Catalina) or later
@@ -73,7 +73,7 @@ Contributions are welcome! Here's how you can help:
 
 ## 📝 Changelog
 
-### v0.3.0 (2025-01-28)
+### v0.3.1 (2025-01-28)
 - Initial public release
 - The Anvil: Premiere Pro project upgrader
 - Support for Premiere Pro versions 2018-2025

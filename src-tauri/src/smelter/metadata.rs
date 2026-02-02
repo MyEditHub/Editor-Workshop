@@ -92,14 +92,59 @@ pub fn read_audio_metadata_full(path: &str) -> Result<AudioMetadata, String> {
         artist = id3v2.artist().map(|s| s.to_string());
         genre = id3v2.genre().map(|s| s.to_string());
 
-        // Access raw frames for TIT1, TIT3, TBPM
-        // TIT1 - Content group (mood tags in Epidemic Sound)
+        // Try multiple sources for mood (in order of priority)
+        // 1. TIT1 - Content group (mood tags in Epidemic Sound)
         if let Some(item) = id3v2.get(&ItemKey::ContentGroup) {
             mood = item.value().text().map(|s| s.to_string());
         }
+        // 2. TMOO - Standard ID3v2.4 mood frame
+        if mood.is_none() {
+            if let Some(item) = id3v2.get(&ItemKey::Mood) {
+                mood = item.value().text().map(|s| s.to_string());
+            }
+        }
+        // 3. Comment field (some files store mood here)
+        if mood.is_none() {
+            if let Some(item) = id3v2.get(&ItemKey::Comment) {
+                let comment = item.value().text().map(|s| s.to_string());
+                // Only use comment if it looks like a mood tag (short, no sentences)
+                if let Some(ref c) = comment {
+                    if c.len() < 50 && !c.contains('.') {
+                        mood = comment;
+                    }
+                }
+            }
+        }
+
+        // 4. TXXX custom frames - check for mood-related descriptions
+        if mood.is_none() {
+            for item in id3v2.items() {
+                if let Some(desc) = item.key().map_key(TagType::Id3v2, true) {
+                    let desc_lower = desc.to_lowercase();
+                    if desc_lower.contains("mood") || desc_lower.contains("style") || desc_lower.contains("vibe") {
+                        if let Some(text) = item.value().text() {
+                            mood = Some(text.to_string());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 5. InitialKey - sometimes used for categorization
+        if mood.is_none() {
+            if let Some(item) = id3v2.get(&ItemKey::InitialKey) {
+                // Only use if it looks like a mood (not a musical key like "C#m")
+                if let Some(text) = item.value().text() {
+                    if !text.contains('#') && !text.contains('m') && text.len() > 3 {
+                        mood = Some(text.to_string());
+                    }
+                }
+            }
+        }
 
         // TIT3 - Subtitle (energy level in Epidemic Sound)
-        if let Some(item) = id3v2.get(&ItemKey::SetSubtitle) {
+        if let Some(item) = id3v2.get(&ItemKey::TrackSubtitle) {
             energy = item.value().text().map(|s| s.to_string());
         }
 

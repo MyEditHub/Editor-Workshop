@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { readFile } from "@tauri-apps/plugin-fs";
 import { MusicIcon, FolderIcon, CheckCircle, AlertCircle } from "../icons";
 import { useAnalytics } from "../hooks/useAnalytics";
 
@@ -103,7 +104,11 @@ const EditableCell = ({ value, placeholder, onSave, className }: EditableCellPro
   );
 };
 
-const TheSmelter = () => {
+interface TheSmelterProps {
+  isActive?: boolean;
+}
+
+const TheSmelter = ({ isActive = true }: TheSmelterProps) => {
   // State
   const [files, setFiles] = useState<MusicFile[]>([]);
   const [isScanning, setIsScanning] = useState(false);
@@ -120,6 +125,78 @@ const TheSmelter = () => {
   const [selectedDuplicates, setSelectedDuplicates] = useState<Set<string>>(new Set());
   const [showBrowseMenu, setShowBrowseMenu] = useState(false);
   const [showUnknownWarning, setShowUnknownWarning] = useState(false);
+  const [isRescanning, setIsRescanning] = useState(false);
+
+  // Audio playback state
+  const [playingFile, setPlayingFile] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const blobUrlRef = useRef<string | null>(null);
+
+  // Play/pause audio file
+  const playFile = async (path: string) => {
+    // If clicking the same file, toggle pause/play
+    if (playingFile === path && audioRef.current) {
+      if (audioRef.current.paused) {
+        audioRef.current.play();
+      } else {
+        audioRef.current.pause();
+      }
+      return;
+    }
+
+    // Stop previous audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+
+    try {
+      // Read file as bytes using Tauri FS plugin
+      const contents = await readFile(path);
+      const mimeType = path.toLowerCase().endsWith(".wav") ? "audio/wav" : "audio/mpeg";
+      const blob = new Blob([contents], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      blobUrlRef.current = url;
+
+      // Create and play audio
+      const audio = new Audio(url);
+      audio.onended = () => setPlayingFile(null);
+      audio.onerror = () => {
+        console.error("Audio playback error");
+        setPlayingFile(null);
+      };
+      await audio.play();
+      audioRef.current = audio;
+      setPlayingFile(path);
+    } catch (error) {
+      console.error("Failed to play audio:", error);
+      setPlayingFile(null);
+    }
+  };
+
+  // Stop audio when tab becomes inactive
+  useEffect(() => {
+    if (!isActive && audioRef.current) {
+      audioRef.current.pause();
+      setPlayingFile(null);
+    }
+  }, [isActive]);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+      }
+    };
+  }, []);
 
   // Count files with Unknown category (respecting per-file overrides)
   const unknownFiles = files.filter((f) => {
@@ -165,10 +242,14 @@ const TheSmelter = () => {
                 ...m,
                 status: "scanned" as FileStatus,
               }));
-              setFiles((prev) => [...prev, ...newFiles]);
-              if (newFiles.length > 0) {
-                analytics.trackSmelterFilesAdded(newFiles.length, "drag_drop");
-              }
+              // Add only unique files (deduplicate by path)
+              setFiles((prev) => {
+                const uniqueNew = addFilesWithDedup(newFiles, prev);
+                if (uniqueNew.length > 0) {
+                  analytics.trackSmelterFilesAdded(uniqueNew.length, "drag_drop");
+                }
+                return [...prev, ...uniqueNew];
+              });
             } catch (error) {
               console.error("Failed to scan folder:", error);
             }
@@ -207,51 +288,6 @@ const TheSmelter = () => {
     }
   }, [files, organizeBy]);
 
-  // Handle file drop
-  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setDragOver(false);
-
-    const droppedItems = Array.from(e.dataTransfer.items);
-    const paths: string[] = [];
-
-    for (const item of droppedItems) {
-      if (item.kind === "file") {
-        const file = item.getAsFile();
-        if (file) {
-          // Get the full path from webkitRelativePath or name
-          // Note: In Tauri, we need to use the file path from the drop event
-          const entry = item.webkitGetAsEntry?.();
-          if (entry) {
-            // For directories, we'd need to traverse them
-            // For now, just handle files
-          }
-          // The path comes from dataTransfer in Tauri
-          const path = (file as File & { path?: string }).path || file.name;
-          if (path.endsWith(".mp3") || path.endsWith(".wav") ||
-              path.endsWith(".MP3") || path.endsWith(".WAV")) {
-            paths.push(path);
-          }
-        }
-      }
-    }
-
-    // Also try to get paths from dataTransfer.files
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    for (const file of droppedFiles) {
-      const path = (file as File & { path?: string }).path;
-      if (path && (path.toLowerCase().endsWith(".mp3") || path.toLowerCase().endsWith(".wav"))) {
-        if (!paths.includes(path)) {
-          paths.push(path);
-        }
-      }
-    }
-
-    if (paths.length > 0) {
-      await scanFiles(paths);
-    }
-  }, []);
-
   // Browse for files (uses Tauri dialog - provides full paths)
   const browseFiles = async () => {
     setShowBrowseMenu(false);
@@ -284,11 +320,14 @@ const TheSmelter = () => {
           ...m,
           status: "scanned" as FileStatus,
         }));
-        setFiles((prev) => [...prev, ...newFiles]);
-        updatePreview([...files, ...newFiles], organizeBy);
-        if (newFiles.length > 0) {
-          analytics.trackSmelterFilesAdded(newFiles.length, "browse");
-        }
+        // Add only unique files (deduplicate by path)
+        setFiles((prev) => {
+          const uniqueNew = addFilesWithDedup(newFiles, prev);
+          if (uniqueNew.length > 0) {
+            analytics.trackSmelterFilesAdded(uniqueNew.length, "browse");
+          }
+          return [...prev, ...uniqueNew];
+        });
       } catch (error) {
         console.error("Failed to scan directory:", error);
       }
@@ -298,8 +337,16 @@ const TheSmelter = () => {
 
   // Scan files for metadata
   const scanFiles = async (paths: string[]) => {
+    // Filter out paths that are already in the file list
+    const existingPaths = new Set(files.map((f) => f.path));
+    const newPaths = paths.filter((p) => !existingPaths.has(p));
+
+    if (newPaths.length === 0) {
+      return; // All files already added
+    }
+
     // Add files as pending
-    const pendingFiles: MusicFile[] = paths.map((path) => ({
+    const pendingFiles: MusicFile[] = newPaths.map((path) => ({
       path,
       filename: path.split("/").pop() || path,
       title: null,
@@ -316,7 +363,7 @@ const TheSmelter = () => {
     setIsScanning(true);
 
     try {
-      const results: AudioMetadata[] = await invoke("scan_audio_files", { paths });
+      const results: AudioMetadata[] = await invoke("scan_audio_files", { paths: newPaths });
 
       // Update files with metadata
       setFiles((prev) => {
@@ -550,6 +597,35 @@ const TheSmelter = () => {
     setFiles((prev) => prev.filter((f) => f.path !== path));
   };
 
+  // Rescan all files - clears cache and re-reads metadata from disk
+  const rescanFiles = async () => {
+    if (files.length === 0) return;
+
+    setIsRescanning(true);
+    try {
+      const paths = files.map((f) => f.path);
+      const results: AudioMetadata[] = await invoke("rescan_files", { paths });
+
+      // Update files with fresh metadata
+      setFiles((prev) =>
+        prev.map((f) => {
+          const fresh = results.find((r) => r.path === f.path);
+          if (fresh) {
+            return {
+              ...fresh,
+              status: "scanned" as FileStatus,
+              organizeByOverride: f.organizeByOverride, // Preserve user overrides
+            };
+          }
+          return f;
+        })
+      );
+    } catch (error) {
+      console.error("Failed to rescan files:", error);
+    }
+    setIsRescanning(false);
+  };
+
   // Update file metadata (in-memory only, for organization)
   const updateFileMetadata = (path: string, field: "genre" | "mood", value: string) => {
     setFiles((prev) => {
@@ -605,6 +681,14 @@ const TheSmelter = () => {
 
   const scannedCount = files.filter((f) => f.status === "scanned" || f.status === "done").length;
 
+  // Helper to add files without duplicates (deduplication by path)
+  const addFilesWithDedup = (newFiles: MusicFile[], currentFiles?: MusicFile[]) => {
+    const existing = currentFiles || files;
+    const existingPaths = new Set(existing.map((f) => f.path));
+    const uniqueNew = newFiles.filter((f) => !existingPaths.has(f.path));
+    return uniqueNew;
+  };
+
   return (
     <div className="smelter-container">
       {/* Header */}
@@ -613,16 +697,10 @@ const TheSmelter = () => {
         <p>Organize your music library by genre or mood</p>
       </div>
 
-      {/* Drop Zone */}
+      {/* Drop Zone - Tauri native drag-drop handles the actual drop via onDragDropEvent */}
       {files.length === 0 && !result && (
         <div
           className={`smelter-drop-zone ${dragOver ? "drag-over" : ""}`}
-          onDrop={handleDrop}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
         >
           <MusicIcon className="drop-zone-icon" />
           <p className="drop-zone-text">Drag music files or folders here</p>
@@ -657,6 +735,14 @@ const TheSmelter = () => {
             <div className="section-header">
               <h3>Files ({files.length})</h3>
               <div className="section-actions">
+                <button
+                  className="rescan-button"
+                  onClick={rescanFiles}
+                  disabled={isRescanning || files.length === 0}
+                  title="Re-read metadata from files (clears cache)"
+                >
+                  {isRescanning ? "↻ Rescanning..." : "↻ Rescan"}
+                </button>
                 <div className="browse-dropdown small">
                   <button
                     className="add-more-button"
@@ -691,10 +777,10 @@ const TheSmelter = () => {
               <table className="file-table">
                 <thead>
                   <tr>
+                    <th></th>
                     <th>Filename</th>
                     <th>Genre</th>
                     <th>Mood</th>
-                    <th>BPM</th>
                     <th>Duration</th>
                     <th></th>
                   </tr>
@@ -702,6 +788,15 @@ const TheSmelter = () => {
                 <tbody>
                   {files.map((file) => (
                     <tr key={file.path} className={`file-row status-${file.status}`}>
+                      <td className="play-cell">
+                        <button
+                          className={`play-btn ${playingFile === file.path ? "playing" : ""}`}
+                          onClick={() => playFile(file.path)}
+                          title={playingFile === file.path ? "Pause" : "Play"}
+                        >
+                          {playingFile === file.path ? "⏸" : "▶"}
+                        </button>
+                      </td>
                       <td className="filename-cell">
                         <span className="filename">{file.filename}</span>
                         {file.title && file.title !== file.filename && (
@@ -728,6 +823,14 @@ const TheSmelter = () => {
                           onClick={() => toggleFileOrganizeBy(file.path, "mood")}
                           title="Click to use Mood for this file"
                         >
+                          {!file.mood && (
+                            <span
+                              className="unknown-warning"
+                              title="No mood metadata found. Try Rescan or double-click to edit."
+                            >
+                              ⚠️
+                            </span>
+                          )}
                           <EditableCell
                             value={file.mood ? file.mood.split(",")[0].trim() : null}
                             placeholder="Unknown"
@@ -736,7 +839,6 @@ const TheSmelter = () => {
                           />
                         </div>
                       </td>
-                      <td className="bpm-cell">{file.bpm || "-"}</td>
                       <td className="duration-cell">{formatDuration(file.duration_secs)}</td>
                       <td className="actions-cell">
                         <button

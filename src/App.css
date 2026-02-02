@@ -18,6 +18,7 @@ body {
   flex-direction: column;
   background: #2a2a2f;
   color: #e8e8e8;
+  overflow: hidden;
 }
 
 /* ===== HEADER ===== */
@@ -413,25 +414,6 @@ body {
 .tool-description {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.6);
-}
-
-.tool-status {
-  margin-left: 20px;
-}
-
-.status-badge {
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.status-badge.active {
-  background: rgba(74, 255, 158, 0.25);
-  color: #5affdb;
-  border: 1px solid rgba(74, 255, 158, 0.4);
 }
 
 /* Quick Tips */
@@ -960,6 +942,29 @@ body {
   color: #ff8888;
 }
 
+.rescan-button {
+  padding: 6px 12px;
+  background: rgba(61, 184, 212, 0.15);
+  border: 1px solid rgba(61, 184, 212, 0.3);
+  border-radius: 6px;
+  color: #3db8d4;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'Work Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rescan-button:hover:not(:disabled) {
+  background: rgba(61, 184, 212, 0.25);
+  color: #5dd4f0;
+}
+
+.rescan-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Scanning Indicator */
 .scanning-indicator {
   display: flex;
@@ -1122,10 +1127,52 @@ body {
   background: rgba(38, 123, 142, 0.15);
 }
 
-.bpm-cell,
+.unknown-warning {
+  font-size: 12px;
+  margin-right: 4px;
+  cursor: help;
+  opacity: 0.9;
+}
+
 .duration-cell {
   color: rgba(255, 255, 255, 0.6);
   font-variant-numeric: tabular-nums;
+}
+
+/* Play button */
+.play-cell {
+  width: 36px;
+  text-align: center;
+  padding: 0 4px !important;
+}
+
+.play-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.play-btn:hover {
+  background: rgba(38, 123, 142, 0.3);
+  border-color: #267b8e;
+  color: #fff;
+}
+
+.play-btn.playing {
+  background: rgba(38, 123, 142, 0.4);
+  border-color: #267b8e;
+  color: #4fd1c5;
 }
 
 .actions-cell {

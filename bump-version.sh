@@ -88,31 +88,63 @@ sed -i '' "s/version-[0-9.]*-blue/version-$NEW_VERSION-blue/g" README.md
 sed -i '' "s/v[0-9]\.[0-9]\.[0-9]/v$NEW_VERSION/g" README.md
 sed -i '' "s|releases/latest|releases/tag/v$NEW_VERSION|g" README.md
 
-# Update public/changelog.md if it exists
+# Update public/changelog.md from NEXT_RELEASE.md (if exists and has real content)
 if [ -f "public/changelog.md" ]; then
   TODAY=$(date +%Y-%m-%d)
-  # Add new version at the top
-  sed -i '' "1a\\
-\\
-## [$NEW_VERSION] - $TODAY\\
-- Version bump to $NEW_VERSION\\
-" public/changelog.md
-fi
 
-# Update CHANGELOG.md if it exists (root level)
-if [ -f "CHANGELOG.md" ]; then
-  TODAY=$(date +%Y-%m-%d)
-  sed -i '' "/^# Changelog/a\\
-\\
-## [$NEW_VERSION] - $TODAY\\
-- Version bump\\
-" CHANGELOG.md
+  # Check if NEXT_RELEASE.md has actual release notes (bullet points that aren't placeholders)
+  HAS_CONTENT=false
+  if [ -f "NEXT_RELEASE.md" ]; then
+    # Look for real bullet points (not the template placeholders)
+    REAL_NOTES=$(grep "^- " NEXT_RELEASE.md 2>/dev/null | grep -v "^- New features$" | grep -v "^- Changes in existing functionality$" | grep -v "^- Bug fixes$" | grep -v "^- Removed features$")
+    if [ -n "$REAL_NOTES" ]; then
+      HAS_CONTENT=true
+    fi
+  fi
+
+  if [ "$HAS_CONTENT" = true ]; then
+    # Extract everything after first line, filtering out template placeholders
+    RELEASE_NOTES=$(tail -n +2 NEXT_RELEASE.md | grep -v "^# " | grep -v "^Add your changes" | grep -v "^- New features$" | grep -v "^- Changes in existing functionality$" | grep -v "^- Bug fixes$" | grep -v "^- Removed features$" | sed '/^$/N;/^\n$/d')
+
+    # Create temp file with new entry
+    {
+      head -n 7 public/changelog.md  # Keep header lines
+      echo ""
+      echo "## [$NEW_VERSION] - $TODAY"
+      echo ""
+      echo "$RELEASE_NOTES"
+      echo ""  # Blank line before next version
+      tail -n +8 public/changelog.md  # Keep rest of file
+    } > public/changelog.tmp && mv public/changelog.tmp public/changelog.md
+
+    # Reset NEXT_RELEASE.md to template
+    cat > NEXT_RELEASE.md << 'TEMPLATE'
+# Next Release Notes
+
+Add your changes here before running `./bump-version.sh`.
+
+### Added
+- New features
+
+### Changed
+- Changes in existing functionality
+
+### Fixed
+- Bug fixes
+TEMPLATE
+
+    echo "  - public/changelog.md (from NEXT_RELEASE.md)"
+  else
+    echo "  ⚠️  NEXT_RELEASE.md has no release notes - add changes before bumping!"
+    echo "     Changelog not updated."
+  fi
 fi
 
 # Regenerate Cargo.lock
 cd src-tauri && cargo update -p editors-workshop && cd ..
 
 echo "✅ Successfully updated to version $NEW_VERSION"
+echo ""
 echo ""
 echo "Updated files:"
 echo "  - package.json"
@@ -122,8 +154,6 @@ echo "  - src-tauri/Cargo.lock"
 echo "  - src/App.tsx"
 echo "  - src/components/Dashboard.tsx"
 echo "  - README.md"
-[ -f "public/changelog.md" ] && echo "  - public/changelog.md"
-[ -f "CHANGELOG.md" ] && echo "  - CHANGELOG.md"
 
 # If --release flag is set, commit and push (CI does the actual build)
 if [ "$RELEASE" = true ]; then

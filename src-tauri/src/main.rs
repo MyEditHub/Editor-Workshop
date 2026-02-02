@@ -106,6 +106,47 @@ async fn delete_duplicates(paths: Vec<String>) -> Result<(u32, Vec<String>), Str
     smelter::organize::delete_duplicates(&paths)
 }
 
+/// Rescan files - clears cache for specified files and re-reads metadata
+#[tauri::command]
+async fn rescan_files(paths: Vec<String>) -> Result<Vec<AudioMetadata>, String> {
+    // Clear cache for these files
+    smelter::cache::clear_cache_for_files(&paths)?;
+
+    // Re-read metadata from disk
+    let mut results = Vec::new();
+    for path in paths {
+        match smelter::metadata::read_audio_metadata_full(&path) {
+            Ok(metadata) => {
+                // Cache the fresh result
+                let _ = smelter::cache::cache_metadata(&metadata);
+                results.push(metadata);
+            }
+            Err(e) => {
+                eprintln!("Error rescanning {}: {}", path, e);
+                // Return partial result with error info
+                results.push(AudioMetadata {
+                    path: path.clone(),
+                    filename: std::path::Path::new(&path)
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("Unknown")
+                        .to_string(),
+                    title: None,
+                    artist: None,
+                    genre: None,
+                    mood: None,
+                    energy: None,
+                    bpm: None,
+                    duration_secs: None,
+                    category_override: None,
+                });
+            }
+        }
+    }
+
+    Ok(results)
+}
+
 // ============ Telemetry Commands ============
 
 /// Queue a telemetry event for later sending
@@ -130,6 +171,9 @@ async fn mark_telemetry_sent(ids: Vec<i64>) -> Result<(), String> {
 }
 
 fn main() {
+    // Initialize database (migrations handle one-time cache clears)
+    let _ = smelter::cache::init_database();
+
     // Initialize Sentry for crash reporting (only in release builds with DSN set)
     let _sentry_guard = std::env::var("SENTRY_DSN").ok().map(|dsn| {
         sentry::init((
@@ -167,6 +211,7 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
             scan_audio_files,
             scan_directory,
@@ -175,6 +220,7 @@ fn main() {
             clear_metadata_cache,
             find_duplicates,
             delete_duplicates,
+            rescan_files,
             queue_telemetry_event,
             get_pending_telemetry,
             mark_telemetry_sent,

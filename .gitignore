@@ -42,3 +42,6 @@ CLAUDE.md
 .env
 .env.local
 .env.*.local
+
+# Features for next release
+NEXT_RELEASE.md

@@ -1,45 +1,80 @@
 # Changelog
 
-## [0.3.0] - 2026-02-02
-- Version bump to 0.3.0
-
-
-## [0.2.0] - 2026-02-02
-- Version bump to 0.2.0
-
-
-## [0.2.0] - 2026-02-02
-- Version bump to 0.2.0
-
-
-## [0.1.6] - 2026-01-31
-- Version bump to 0.1.6
-
-
-## [0.1.5] - 2026-01-29
-- Version bump to 0.1.5
-
-
-## [0.1.5] - 2026-01-29
-- Version bump to 0.1.5
-
-
-## [0.1.5] - 2026-01-29
-- Version bump to 0.1.5
-
-
-## [0.1.5] - 2026-01-29
-- Version bump to 0.1.5
-
-
-## [0.1.5] - 2026-01-28
-- Version bump to 0.1.5
-
-
 All notable changes to The Editors Workshop will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+
+## [0.3.1] - 2026-02-02
+
+
+### Added
+- **Audio preview playback** - Click play button to preview audio files directly in The Smelter
+- **Rescan files command** - Re-read metadata from disk after external edits
+- **Automated changelog workflow** - Release notes from NEXT_RELEASE.md staging file
+- **Cache migrations system** - One-time migrations for schema updates
+- **File size tracking** in metadata cache for better change detection
+
+### Changed
+- Improved bump-version.sh to read release notes from NEXT_RELEASE.md
+- Cleaned up changelog with proper entries for 0.2.0 and 0.3.0
+- Enhanced cache invalidation with file size + modification time checks
+- Audio playback automatically stops when switching tabs
+
+### Fixed
+- Dialog permissions for Smelter browse buttons (added dialog:default capability)
+- User-friendly error messages in organize.rs and metadata.rs
+- Stale cache data cleared via migration for fresh metadata reads
+
+## [0.3.0] - 2026-02-02
+
+### Added
+- **Compact launcher UI** - App starts in a small 600×280 window showing only header and tabs
+- Window expands to full size (1000×700) when a tool is selected
+- **Telemetry & analytics** (optional, user can opt-out in Settings)
+  - Sentry integration for crash reporting and error tracking
+  - PostHog integration for anonymous usage analytics
+  - Offline event queue - events stored locally in SQLite, synced when online
+- **Error boundary** - Catches React crashes with user-friendly recovery UI
+- **ESLint setup** - TypeScript/React linting with eslint.config.js
+- **CI linting workflow** - Runs on every push and PR
+
+### Changed
+- The Anvil converted to dark theme (matching The Smelter style)
+- Improved error messages throughout the app
+
+## [0.2.0] - 2026-02-02
+
+### Added
+- **The Smelter** - Music library organizer (new tool!)
+  - Organizes MP3/WAV files by genre or mood using embedded ID3 metadata
+  - Works 100% offline - no API keys needed
+  - Supports Epidemic Sound's rich ID3 tags (TCON, TIT1, TIT3, TBPM)
+  - Browse dropdown with "Select Files" / "Select Folder" options
+  - Drag-drop support for files and folders (recursive scanning)
+  - Inline metadata editing (double-click to edit genre/mood)
+  - Per-file organize-by override (click Genre/Mood cell to override)
+  - Duplicate detection with delete/skip options
+  - Unknown files warning modal before organizing
+  - Auto-updating preview when files or settings change
+  - SQLite caching for faster repeated scans
+- Keyboard shortcut Cmd+3 for The Smelter
+
+### Changed
+- Dashboard updated with The Smelter listing
+
+## [0.1.6] - 2026-01-31
+
+### Fixed
+- Auto-updater signing key configuration
+- GitHub Actions release workflow improvements
+
+## [0.1.5] - 2026-01-29
+
+### Fixed
+- PKG installer improvements
+- Gatekeeper bypass documentation
 
 ## [0.1.4] - 2025-01-28
 
@@ -118,16 +153,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic project structure
 - Vite build configuration
 - Development environment setup
-
----
-
-## Upcoming Features
-
-### Planned
-- The Forge - Additional video editing tools
-- The Hammer - File conversion utilities
-- The Chisel - Precision editing tools
-- Cloud backup integration
-- Project templates library
-- Batch operation history
-- Advanced keyboard shortcuts customization
