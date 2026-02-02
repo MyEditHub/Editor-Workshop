@@ -125,33 +125,23 @@ echo "  - README.md"
 [ -f "public/changelog.md" ] && echo "  - public/changelog.md"
 [ -f "CHANGELOG.md" ] && echo "  - CHANGELOG.md"
 
-# If --release flag is set, build and commit
+# If --release flag is set, commit and push (CI does the actual build)
 if [ "$RELEASE" = true ]; then
   echo ""
-  echo "🔨 Building..."
-  npm run tauri build
+  echo "📦 Committing..."
+  git add .
+  git commit -m "Bump version to $NEW_VERSION"
 
-  if [ $? -eq 0 ]; then
-    echo ""
-    echo "📦 Committing..."
-    git add .
-    git commit -m "Bump version to $NEW_VERSION"
-    
-    echo ""
-    echo "🏷️  Creating tag..."
-    git tag "v$NEW_VERSION"
-    
-    echo ""
-    echo "📤 Pushing..."
-    git push && git push origin "v$NEW_VERSION"
-    
-    echo ""
-    echo "🚀 Release complete! Version $NEW_VERSION is building on GitHub Actions."
-  else
-    echo ""
-    echo "❌ Build failed. Commit skipped."
-    exit 1
-  fi
+  echo ""
+  echo "🏷️  Creating tag..."
+  git tag "v$NEW_VERSION"
+
+  echo ""
+  echo "📤 Pushing..."
+  git push && git push origin "v$NEW_VERSION"
+
+  echo ""
+  echo "🚀 Release complete! Version $NEW_VERSION is building on GitHub Actions."
 else
   echo ""
   echo "Next steps:"
