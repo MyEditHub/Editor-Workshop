@@ -1,6 +1,6 @@
 [package]
 name = "editors-workshop"
-version = "0.1.6"
+version = "0.2.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -25,4 +25,15 @@ tauri-plugin-process = "2"
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+# The Smelter - Music organization
+lofty = "0.21"                                          # Audio metadata (ID3 tags)
+rusqlite = { version = "0.31", features = ["bundled"] } # SQLite for caching
+walkdir = "2"                                           # Directory traversal
+thiserror = "1.0"                                       # Error handling
+dirs-next = "2.0"                                       # Platform-specific directories
+lazy_static = "1.4"                                     # Lazy initialization
+
+# Telemetry - Error tracking and analytics
+sentry = "0.34"                                         # Crash reporting
 

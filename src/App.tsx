@@ -1,33 +1,59 @@
 import { useState, useEffect } from "react";
 import Dashboard from "./components/Dashboard";
 import TheAnvil from "./components/TheAnvil";
-import { HomeIcon, AnvilIcon, SettingsIcon } from "./icons";
+import TheSmelter from "./components/TheSmelter";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { HomeIcon, AnvilIcon, MusicIcon, SettingsIcon } from "./icons";
 import { useChangelog } from "./hooks/useChangelog";
 import { useAutoUpdater } from "./hooks/useAutoUpdater";
+import { useAnalytics, isAnalyticsEnabled, setAnalyticsEnabled } from "./hooks/useAnalytics";
 import "./App.css";
 
-type Tab = "dashboard" | "anvil";
+type Tab = "dashboard" | "anvil" | "smelter";
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [lifetimeCount, setLifetimeCount] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
+  const [analyticsEnabled, setAnalyticsEnabledState] = useState(isAnalyticsEnabled());
   const { changelog, loading: changelogLoading } = useChangelog();
   const { isChecking, checkForUpdates } = useAutoUpdater();
+  const analytics = useAnalytics();
+
+  // Track app launch
+  useEffect(() => {
+    analytics.trackAppLaunched();
+  }, []);
+
+  // Track tab changes
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    analytics.trackToolOpened(tab);
+  };
+
+  // Toggle analytics preference
+  const handleAnalyticsToggle = (enabled: boolean) => {
+    setAnalyticsEnabledState(enabled);
+    setAnalyticsEnabled(enabled);
+  };
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey) {
         if (e.key === "1") {
           e.preventDefault();
-          setActiveTab("dashboard");
+          handleTabChange("dashboard");
         } else if (e.key === "2") {
           e.preventDefault();
-          setActiveTab("anvil");
+          handleTabChange("anvil");
+        } else if (e.key === "3") {
+          e.preventDefault();
+          handleTabChange("smelter");
         } else if (e.key === ",") {
           e.preventDefault();
           setShowSettings(!showSettings);
+          if (!showSettings) analytics.trackSettingsOpened();
         }
       }
     };
@@ -41,6 +67,7 @@ function App() {
   };
 
   return (
+    <ErrorBoundary>
     <div className="app-container">
       {/* Header with centered logo */}
       <header className="app-header">
@@ -54,7 +81,10 @@ function App() {
         {/* Settings icon in top-right */}
         <button
           className="settings-button"
-          onClick={() => setShowSettings(!showSettings)}
+          onClick={() => {
+            if (!showSettings) analytics.trackSettingsOpened();
+            setShowSettings(!showSettings);
+          }}
           title="Settings (Cmd+,)"
         >
           <SettingsIcon />
@@ -80,7 +110,7 @@ function App() {
             <div className="settings-content">
               <div className="settings-section">
                 <h3>About</h3>
-                <p>Editor Workshop v0.1.6</p>
+                <p>Editor Workshop v0.2.0</p>
                 <p>Professional tools for video editors</p>
                 <button
                   className="changelog-button"
@@ -102,6 +132,9 @@ function App() {
                     <kbd>Cmd+2</kbd> The Anvil
                   </li>
                   <li>
+                    <kbd>Cmd+3</kbd> The Smelter
+                  </li>
+                  <li>
                     <kbd>Cmd+,</kbd> Settings
                   </li>
                 </ul>
@@ -116,6 +149,14 @@ function App() {
                 <label className="settings-checkbox">
                   <input type="checkbox" defaultChecked />
                   <span>Show notification when update is available</span>
+                </label>
+                <label className="settings-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={analyticsEnabled}
+                    onChange={(e) => handleAnalyticsToggle(e.target.checked)}
+                  />
+                  <span>Help improve Editor Workshop by sending anonymous usage data</span>
                 </label>
               </div>
 
@@ -141,7 +182,7 @@ function App() {
                     margin: 0,
                   }}
                 >
-                  v0.1.6
+                  v0.2.0
                 </p>
               </div>
             </div>
@@ -153,7 +194,7 @@ function App() {
       <nav className="tab-navigation">
         <button
           className={`tab-button ${activeTab === "dashboard" ? "active" : ""}`}
-          onClick={() => setActiveTab("dashboard")}
+          onClick={() => handleTabChange("dashboard")}
         >
           <HomeIcon className="tab-icon" />
           <span>Dashboard</span>
@@ -161,10 +202,18 @@ function App() {
 
         <button
           className={`tab-button ${activeTab === "anvil" ? "active" : ""}`}
-          onClick={() => setActiveTab("anvil")}
+          onClick={() => handleTabChange("anvil")}
         >
           <AnvilIcon className="tab-icon" />
           <span>The Anvil</span>
+        </button>
+
+        <button
+          className={`tab-button ${activeTab === "smelter" ? "active" : ""}`}
+          onClick={() => handleTabChange("smelter")}
+        >
+          <MusicIcon className="tab-icon" />
+          <span>The Smelter</span>
         </button>
       </nav>
 
@@ -176,8 +225,10 @@ function App() {
         {activeTab === "anvil" && (
           <TheAnvil onUpdateCount={updateLifetimeCount} />
         )}
+        {activeTab === "smelter" && <TheSmelter />}
       </main>
     </div>
+    </ErrorBoundary>
   );
 }
 

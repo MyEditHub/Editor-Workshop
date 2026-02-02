@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { check } from '@tauri-apps/plugin-updater';
+import { check, type Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { ask } from '@tauri-apps/plugin-dialog';
 
 export function useAutoUpdater() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [updateInfo, setUpdateInfo] = useState<any>(null);
+  const [updateInfo, setUpdateInfo] = useState<Update | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
 
@@ -38,7 +38,7 @@ export function useAutoUpdater() {
     }
   };
 
-  const installUpdateNow = async (update: any) => {
+  const installUpdateNow = async (update: Update) => {
     setIsInstalling(true);
     try {
       // Download and install the update

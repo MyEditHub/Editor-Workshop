@@ -51,6 +51,12 @@ jobs:
           export TAURI_SIGNING_PRIVATE_KEY="$(cat /tmp/signing.key)"
           export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="${{ secrets.TAURI_PRIVATE_KEY_PASSWORD }}"
           npm run tauri build -- --target ${{ matrix.target }}
+        env:
+          # Telemetry - embedded at build time for frontend
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
+          # Rust backend reads at runtime, but we set here for consistency
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
       - name: Find and rename artifacts
         id: artifacts

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FileIcon, CheckCircle, AlertCircle } from '../icons';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 interface TheAnvilProps {
   onUpdateCount: (count: number) => void;
@@ -29,6 +30,7 @@ const TheAnvil = ({ onUpdateCount }: TheAnvilProps) => {
   const [targetVersion, setTargetVersion] = useState('43');
   const [processedFiles, setProcessedFiles] = useState<ProcessedFile[]>([]);
   const [showVersionList, setShowVersionList] = useState(false);
+  const analytics = useAnalytics();
 
   const versionMap: VersionMap[] = [
     { version: '1', year: '2018', name: 'CC 2018 (12.0)' },
@@ -62,6 +64,9 @@ const TheAnvil = ({ onUpdateCount }: TheAnvilProps) => {
     const droppedFiles = Array.from(e.dataTransfer.files).filter((file) =>
       file.name.endsWith('.prproj')
     );
+    if (droppedFiles.length > 0) {
+      analytics.trackAnvilFilesAdded(droppedFiles.length);
+    }
     setFiles((prev) => [
       ...prev,
       ...droppedFiles.map((f) => ({
@@ -77,6 +82,9 @@ const TheAnvil = ({ onUpdateCount }: TheAnvilProps) => {
     const selectedFiles = Array.from(e.target.files || []).filter((file) =>
       file.name.endsWith('.prproj')
     );
+    if (selectedFiles.length > 0) {
+      analytics.trackAnvilFilesAdded(selectedFiles.length);
+    }
     setFiles((prev) => [
       ...prev,
       ...selectedFiles.map((f) => ({
@@ -151,6 +159,11 @@ const TheAnvil = ({ onUpdateCount }: TheAnvilProps) => {
     const newCount = currentCount + successCount;
     localStorage.setItem('premiere-upgrader-lifetime-count', newCount.toString());
     onUpdateCount(newCount);
+
+    // Track successful upgrades
+    if (successCount > 0) {
+      analytics.trackAnvilUpgrade(successCount, targetVersion);
+    }
 
     setProcessing(false);
   };
@@ -290,40 +303,39 @@ const TheAnvil = ({ onUpdateCount }: TheAnvilProps) => {
   };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <div className="anvil-container">
-        <div style={{ marginBottom: '32px' }}>
-          <label className="anvil-label">
-            TARGET VERSION NUMBER
-          </label>
-          <div style={{ display: 'flex', gap: '12px' }}>
+    <div className="anvil-container-dark">
+      {/* Header */}
+      <div className="anvil-header">
+        <h2>The Anvil</h2>
+        <p>Upgrade Adobe Premiere Pro project files to newer versions</p>
+      </div>
+
+      {/* Version Selection */}
+      <div className="anvil-section">
+        <div className="anvil-version-selector">
+          <label className="anvil-label-dark">Target Version</label>
+          <div className="anvil-version-input-row">
             <input
               type="number"
               value={targetVersion}
               onChange={(e) => setTargetVersion(e.target.value)}
-              style={{ flex: 1, padding: '12px 16px', fontSize: '16px', border: '2px solid #e0e0e0', borderRadius: '8px', fontFamily: 'Work Sans, sans-serif' }}
+              className="anvil-input-dark"
               placeholder="e.g., 43"
             />
             <button
               onClick={() => setShowVersionList(!showVersionList)}
-              style={{ padding: '12px 24px', backgroundColor: '#267b8e', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontFamily: 'Work Sans, sans-serif' }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1f6373')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#267b8e')}
+              className="anvil-button-secondary"
             >
               {showVersionList ? 'Hide' : 'Show'} Versions
             </button>
           </div>
-          <p className="anvil-input-hint">
-            Most common: Version 43 (Premiere Pro 2025)
-          </p>
+          <p className="anvil-hint">Most common: Version 43 (Premiere Pro 2025)</p>
         </div>
 
         {showVersionList && (
-          <div style={{ marginBottom: '32px', padding: '24px', backgroundColor: '#f9f9f9', borderRadius: '8px', border: '2px solid #e0e0e0' }}>
-            <h3 className="version-ref-title">
-              VERSION REFERENCE
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px' }}>
+          <div className="anvil-version-list">
+            <h4>Version Reference</h4>
+            <div className="anvil-version-grid">
               {versionMap.map((v) => (
                 <button
                   key={v.version}
@@ -331,47 +343,34 @@ const TheAnvil = ({ onUpdateCount }: TheAnvilProps) => {
                     setTargetVersion(v.version);
                     setShowVersionList(false);
                   }}
-                  style={{ padding: '16px', backgroundColor: 'white', border: '2px solid #e0e0e0', borderRadius: '8px', cursor: 'pointer', textAlign: 'left', fontFamily: 'Work Sans, sans-serif' }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#267b8e';
-                    e.currentTarget.style.color = 'white';
-                    e.currentTarget.style.borderColor = '#267b8e';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'white';
-                    e.currentTarget.style.color = 'inherit';
-                    e.currentTarget.style.borderColor = '#e0e0e0';
-                  }}
+                  className="anvil-version-button"
                 >
-                  <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>v{v.version}</span>
-                  <span style={{ margin: '0 8px', color: '#999' }}>→</span>
-                  <span>{v.name}</span>
+                  <span className="version-number">v{v.version}</span>
+                  <span className="version-arrow">→</span>
+                  <span className="version-name">{v.name}</span>
                 </button>
               ))}
             </div>
           </div>
         )}
+      </div>
 
+      {/* Drop Zone */}
+      {files.length === 0 && (
         <div
-          className="anvil-drag-area"
+          className="anvil-drop-zone"
           onDrop={handleFileDrop}
           onDragOver={(e) => e.preventDefault()}
         >
-          <FileIcon style={{ width: '64px', height: '64px', margin: '0 auto 24px', color: '#999' }} />
-          <p className="anvil-drag-text">
-            Drag & drop .prproj files here
-          </p>
-          <p className="anvil-drag-subtext">or</p>
-          <label
-            style={{ display: 'inline-block', padding: '12px 32px', backgroundColor: '#267b8e', color: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontFamily: 'Work Sans, sans-serif' }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1f6373')}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#267b8e')}
-          >
+          <FileIcon className="drop-zone-icon" />
+          <p className="drop-zone-text">Drag & drop .prproj files here</p>
+          <p className="drop-zone-hint">or</p>
+          <label className="browse-button">
             Browse Files or Folders
             <input
               type="file"
               multiple
-              // @ts-ignore - webkitdirectory is not in TypeScript types
+              // @ts-expect-error - webkitdirectory is not in TypeScript types
               webkitdirectory=""
               directory=""
               accept=".prproj"
@@ -380,65 +379,72 @@ const TheAnvil = ({ onUpdateCount }: TheAnvilProps) => {
             />
           </label>
         </div>
-      </div>
+      )}
 
+      {/* File List */}
       {files.length > 0 && (
-        <div className="anvil-container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-            <h2 className="anvil-section-title">Files ({files.length})</h2>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <button
-                onClick={clearAll}
-                style={{ padding: '10px 20px', backgroundColor: '#e0e0e0', color: '#333', border: 'none', borderRadius: '8px', cursor: 'pointer', fontFamily: 'Work Sans, sans-serif' }}
-              >
+        <div className="anvil-files-section">
+          <div className="section-header">
+            <h3>Files ({files.length})</h3>
+            <div className="section-actions">
+              <label className="add-more-button">
+                + Add Files
+                <input
+                  type="file"
+                  multiple
+                  // @ts-expect-error - webkitdirectory is not in TypeScript types
+                  webkitdirectory=""
+                  directory=""
+                  accept=".prproj"
+                  onChange={handleFileSelect}
+                  style={{ display: 'none' }}
+                />
+              </label>
+              <button onClick={clearAll} className="clear-button">
                 Clear All
-              </button>
-              {processedFiles.length > 0 && (
-                <button
-                  onClick={downloadAllAsZip}
-                  style={{ padding: '10px 20px', backgroundColor: '#267b8e', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontFamily: 'Work Sans, sans-serif' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1f6373')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#267b8e')}
-                >
-                  Download ZIP ({processedFiles.length})
-                </button>
-              )}
-              <button
-                onClick={processAllFiles}
-                disabled={processing || files.every((f) => f.status !== 'pending')}
-                style={{ padding: '10px 32px', backgroundColor: processing ? '#ccc' : '#267b8e', color: 'white', border: 'none', borderRadius: '8px', cursor: processing ? 'not-allowed' : 'pointer', fontWeight: '600', fontFamily: 'Work Sans, sans-serif' }}
-              >
-                {processing ? 'Processing...' : 'Upgrade All'}
               </button>
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="anvil-file-list">
             {files.map((fileObj, index) => (
-              <div key={index} className="anvil-file-item">
-                <div style={{ flex: 1 }}>
-                  <p className="anvil-file-name">{fileObj.file.name}</p>
+              <div key={index} className={`anvil-file-row status-${fileObj.status}`}>
+                <div className="file-info">
+                  <span className="file-name">{fileObj.file.name}</span>
                   {fileObj.currentVersion && (
-                    <p className="anvil-file-version">
-                      Version {fileObj.currentVersion} → {targetVersion}
-                    </p>
+                    <span className="file-version">
+                      v{fileObj.currentVersion} → v{targetVersion}
+                    </span>
                   )}
-                  {fileObj.error && <p className="anvil-file-error">{fileObj.error}</p>}
+                  {fileObj.error && <span className="file-error">{fileObj.error}</span>}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  {fileObj.status === 'pending' && <span className="anvil-status-pending">Pending</span>}
-                  {fileObj.status === 'processing' && <span className="anvil-status-processing">Processing...</span>}
-                  {fileObj.status === 'completed' && <CheckCircle style={{ width: '24px', height: '24px', color: '#4caf50' }} />}
-                  {fileObj.status === 'error' && <AlertCircle style={{ width: '24px', height: '24px', color: '#d32f2f' }} />}
-                  <button
-                    onClick={() => removeFile(index)}
-                    style={{ fontSize: '14px', color: '#d32f2f', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Work Sans, sans-serif' }}
-                  >
-                    Remove
+                <div className="file-actions">
+                  {fileObj.status === 'pending' && <span className="status-badge pending">Pending</span>}
+                  {fileObj.status === 'processing' && <span className="status-badge processing">Processing...</span>}
+                  {fileObj.status === 'completed' && <CheckCircle className="status-icon success" />}
+                  {fileObj.status === 'error' && <AlertCircle className="status-icon error" />}
+                  <button onClick={() => removeFile(index)} className="remove-button" title="Remove">
+                    ×
                   </button>
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="anvil-action-bar">
+            {processedFiles.length > 0 && (
+              <button onClick={downloadAllAsZip} className="anvil-button-secondary">
+                Download ZIP ({processedFiles.length})
+              </button>
+            )}
+            <button
+              onClick={processAllFiles}
+              disabled={processing || files.every((f) => f.status !== 'pending')}
+              className="organize-button"
+            >
+              {processing ? 'Processing...' : `Upgrade ${files.filter(f => f.status === 'pending').length} Files`}
+            </button>
           </div>
         </div>
       )}

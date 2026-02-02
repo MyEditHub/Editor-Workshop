@@ -5,7 +5,8 @@ interface DashboardProps {
 const Dashboard = ({ lifetimeCount }: DashboardProps) => {
   // Available tools
   const tools = [
-    { name: 'The Anvil', description: 'Premiere Pro Project Upgrader', status: 'active' }
+    { name: 'The Anvil', description: 'Premiere Pro Project Upgrader', status: 'active' },
+    { name: 'The Smelter', description: 'Music Library Organizer', status: 'active' }
   ];
 
   return (
@@ -66,7 +67,7 @@ const Dashboard = ({ lifetimeCount }: DashboardProps) => {
             <div className="tip-icon">⌨️</div>
             <div className="tip-text">
               <strong>Keyboard Shortcuts</strong>
-              <p>Use Cmd+1, Cmd+2 to switch between tools quickly</p>
+              <p>Use Cmd+1, Cmd+2, Cmd+3 to switch between tools quickly</p>
             </div>
           </div>
           <div className="tip-card">
@@ -76,11 +77,18 @@ const Dashboard = ({ lifetimeCount }: DashboardProps) => {
               <p>Batch upgrade Premiere Pro projects to newer versions</p>
             </div>
           </div>
+          <div className="tip-card">
+            <div className="tip-icon">🎵</div>
+            <div className="tip-text">
+              <strong>The Smelter</strong>
+              <p>Organize music files by genre or mood from metadata</p>
+            </div>
+          </div>
         </div>
       </section>
 
       <footer style={{ textAlign: 'center', marginTop: '32px', color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>
-        v0.1.6
+        v0.2.0
       </footer>
     </div>
   );
