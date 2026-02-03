@@ -1,15 +1,15 @@
 {
-  "version": "0.3.1",
-  "notes": "See the assets to download this version and install.",
-  "pub_date": "2026-02-03T09:58:09Z",
+  "version": "0.3.2",
+  "notes": "\n\n### Fixed\n- Auto-updater now works correctly (added missing Tauri plugin permissions)\n\n### Changed\n- Release notes now appear in update dialog\n\n\n\n### Fixed\n- **Auto-updater now works** - Added missing Tauri plugin permissions (updater:default, process:default)\n\n### Changed\n- Release notes now appear in update dialog (pulled from changelog.md)\n- GitHub Release page shows version-specific notes at the top\n",
+  "pub_date": "2026-02-03T10:16:41Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T2dzKzc4b3JMVEpEV1BDbkJzNEJLNFBkVmlmUkJqMGprbG9Bam5aM0ZBcU9ZRCtCQmdyVExyRmxBVDFDTnAzNHM0S2Q1Zk0wWiszZnlSUXFzcHpNQnc0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcwMTEyNjY4CWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKbUl4amhMRjRTbEk5d0pGMmN6Y2lrTkJwaUo4UHhsYWlLK1RGU0FPTFBKZlJSeFBzdE5zb05ualR6WmJxaEsvV0dPdHNLOGNkamZTZEh5V3I4Wm5pQVE9PQo=",
-      "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.3.1_arm64.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T28rMFl2dGRWcVJnWE41Z1VURm5LU2ZQanQ3cnV0bWZHVDRYakJIMW5BTUJrbG9mSXBaaGZ5TmFJaE03SzkreE5VTERHTXREZXAxYmFUSGRIeVNjSUFBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcwMTEzNjU0CWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKSEdHNzgrdmtYM012N3Y0TGgvV0g1WGZHejgrdXMwcTAyL2ttdUVrWXhEd243QjdpOSttY3Jib0FlQk4rTlBHaVJBT3ZuT0JheFdVNHVCOGM1bG1PQ0E9PQo=",
+      "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.3.2_arm64.app.tar.gz"
     },
     "darwin-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T20rdXp5TTZnaEpxamdlM0VodzZLTEQ5SkhuNGpxWG5yZHhYdGJpT2M5clpUS1RRS2R6MXpZZUZIWTNaMmNmV3NqVm80WVlRNHEzYzYwUDJMamYvc3dJPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcwMTEyNTY5CWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKK3JBMXBWZm9hVTk0UXZ3OGlwMEJ4NERnSzdTUU0rV1VNcUdmK21XMFhsMWQ3cDZMODJCL0VzUGYzRFhJTllBMUxBUnRuL09paWhYQzA5eEFqTEhCRGc9PQo=",
-      "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.3.1_x64.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T21SWWNVSGkreklnMWlHbFYzNWp1aDZKUGhuQWhpblVacHJKYXZTT0dKKzdFbGkvR2NmSnRnOEZ2Z2dPTlpzcVZEbVJpa3JGcFkvenh0cTJvOTFiV1FRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcwMTEzNzgxCWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKT2xYbVlzQTBGME0zRGJOMTd4OUo0VWVlK2RVb3BxU3pVbHFSU2hYUHdkemx4cm50ejR3bFYwbWErS3FmKzhhV1hZUmY4M2RVaWI4aVZjOStYVlltQ0E9PQo=",
+      "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.3.2_x64.app.tar.gz"
     }
   }
 }
