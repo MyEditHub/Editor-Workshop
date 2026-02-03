@@ -1,15 +1,15 @@
 {
-  "version": "0.3.0",
+  "version": "0.3.1",
   "notes": "See the assets to download this version and install.",
-  "pub_date": "2026-02-02T15:07:49Z",
+  "pub_date": "2026-02-03T07:32:41Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T2hKYnJEUnM5L2VkSDBHbXNQREdsc0t2SEV3V0YwcXFRbjBtVmJ1b0ptY043M040emwxbnVDaUtiMDJ3Z0hvUXFuQUFFc2RDaStjYlowZ05xZVE3aGdrPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcwMDQ0ODQ3CWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKYytLR0pmOVRBeTBLamVjd05OdGlzNGFVeVQweWhlRE1LSVljVzJJNzJNOEJKV1VsRUxMUW8vbVFuYnBCMjI3dXJiR1FGMElmcDBYUGxkYzZvT0RiQ0E9PQo=",
-      "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.3.0_arm64.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T295MEkxbG5BRHU3NnhhSFhHZmwzRWdjSDErN0N6bythWHRtTUVPclBINmhNNWNIakNzQ09jQldrYTJlcEtyY1htTjZ3c2VyeFpDdCtTcUJ2K3BVaVFBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcwMTAzNjc0CWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKYlE3WEIrTnFOZ1VTV1YyY0tqOENacnA4amJGOGFYNXVjbDdvTFUraUMzSFlSK0hFWjhRdW54TEk4V0hLVWFWWEFMWkREMUJCYU85ODNLVHJjYnVXQlE9PQo=",
+      "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.3.1_arm64.app.tar.gz"
     },
     "darwin-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T3Jxa0JyKzVHU1lYQm84S0p1Vzh2VUVycytWUG0zMEk0QUdtemE3S2JpOHBNaUNsM2FobitQbVNwNU9DeGhSbjBaRmQ1dGFGVjcxeERKaTRNdXBWQ1FjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcwMDQ0ODM4CWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKc2pkMkxiR01qd3lqOHJaZTdIczM3RmpXVzk3aXo2K2lsSXNWTSt2cU0zQXBRZmtpR3BOYW9FZUhkbkZ2d2U0NktMb0xXeW5IbG5ocmhJeWcweHlQRHc9PQo=",
-      "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.3.0_x64.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T2xvUk90bUZ0YVJ4cUtzT0szWWdYd1NkdEtpT0s5SCtrUGljV0QrV0xhR3JtUGdqMnhTRlg5b0Yzb3dhOWI1MjZ6dStoTjdmc3pPYWdvbTRjWlJLRFFNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcwMTAzOTQyCWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKMGRnOGt5c2ZUYTVlaXRPSG0wWWdwVEZETGdWUHovV2xNY1VSbXBiRk1pNy9Pc3RlWWhOUnFkMndHdDQybTRHU1ZUbTVuMWpaWWpPNU1UVnBkWEFhQ0E9PQo=",
+      "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.3.1_x64.app.tar.gz"
     }
   }
 }
