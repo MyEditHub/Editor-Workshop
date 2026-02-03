@@ -11,6 +11,15 @@ A Toolbox for video editors. Save time and streamline your workflow.
 - **Folder Support** - Select entire folders of project files
 - **ZIP Export** - Download all upgraded projects in a single archive
 
+### The Smelter - Music Library Organizer
+- **Smart Organization** - Organize music files by genre or mood using embedded ID3 metadata
+- **Epidemic Sound Support** - Reads rich metadata from Epidemic Sound files
+- **Drag & Drop** - Add files or entire folders with recursive scanning
+- **Inline Editing** - Double-click to edit genre/mood metadata directly
+- **Per-File Override** - Choose genre or mood organization for individual files
+- **Duplicate Detection** - Warns about existing files before organizing
+- **100% Offline** - No API keys or internet required
+
 ## 📥 Download
 
 **Latest Release:** [v0.3.2](https://github.com/MyEdithub/Editor-workshop/releases/tag/v0.3.2)
@@ -28,13 +37,21 @@ A Toolbox for video editors. Save time and streamline your workflow.
 
 ## 🎯 Usage
 
-### Quick Start
+### The Anvil - Quick Start
 1. Launch Editor Workshop
 2. Navigate to **The Anvil** tab
 3. Select your target Premiere Pro version (e.g., Version 43 for Premiere Pro 2025)
 4. Drag and drop your `.prproj` files or select a folder
 5. Click **"Upgrade All"** to process files
 6. Download the upgraded projects as a ZIP file
+
+### The Smelter - Quick Start
+1. Navigate to **The Smelter** tab (or press `Cmd+3`)
+2. Drag and drop music files or folders, or use the Browse button
+3. Choose organization method: **Genre** or **Mood**
+4. Select output folder
+5. Review the preview showing folder structure
+6. Click **"Organize"** to sort files into folders
 
 ### Supported Versions
 

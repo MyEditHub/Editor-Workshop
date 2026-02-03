@@ -8,21 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.2] - 2026-02-03
 
-
 ### Fixed
 - Auto-updater now works correctly (added missing Tauri plugin permissions)
 
 ### Changed
 - Release notes now appear in update dialog
-
-
-## [0.3.2] - 2026-02-03
-
-### Fixed
-- **Auto-updater now works** - Added missing Tauri plugin permissions (updater:default, process:default)
-
-### Changed
-- Release notes now appear in update dialog (pulled from changelog.md)
 - GitHub Release page shows version-specific notes at the top
 
 ## [0.3.1] - 2026-02-02
