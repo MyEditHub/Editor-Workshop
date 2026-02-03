@@ -1,14 +1,14 @@
 {
   "version": "0.3.3",
   "notes": "\n### Added\n- **SFX folder detection** - Files without \"ES_\" prefix (non-Epidemic Sound) automatically go to a dedicated \"SFX\" folder\n  - Case-sensitive: only exact `ES_` prefix counts as Epidemic Sound music\n  - `ES_Epic_Track.mp3` → organized by genre/mood as before\n  - `whoosh.mp3`, `impact_hit.wav` → goes to \"SFX\" folder\n  - Existing organized folders are preserved when running organize again\n\n### Changed\n- (none)\n\n### Fixed\n- **The Anvil drag-drop** - Fixed drag-and-drop not working for .prproj files (now uses Tauri native events)\n\n",
-  "pub_date": "2026-02-03T16:38:23Z",
+  "pub_date": "2026-02-03T16:44:15Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T2dtL0VzVDVqYnJrL1dGd2p2dndCaVhYZmZOWEFXNVNpanFpSWFqK1doNHZBZFFOVGJyT2FYbzdGWm53OUFpUGVHRGRzMTBMUDA1azdaVjFCV2Erb2dVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcwMTM2NjgxCWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKR1JDT0VPZW9CcnIwME9aMTNGeVN4aXN4WXBSczV5U1JsVlJNZE5rRE1UOEpJSU1ERDZ3K2hDZEJvTkdadDArOHlRcnYwYVZFTTQ3N2xpb0pxbGpORGc9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T2hXSXVlUlVQbWFZK3YrcHBmWXVLbHQ4QXZORnZBc2JqMVBCMjNrcTVVN1h1M09uYm1HY0lISFJpbXhyUE9tRFZkeldxTmg4cnJUWHlweEZEYWRjV2dnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcwMTM3MDM3CWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKaGRuVUsyUEZEN2FaN1QyaW5obFh3ZmhObXBuNjlyNXdTVGUxK3AyQlhROTMrd1VrSGFxN2NDMmRqbjcvRWF6YytleEpNUUplMlRyTGxtME12eWNhQ1E9PQo=",
       "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.3.3_arm64.app.tar.gz"
     },
     "darwin-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T3VNNS9iZnJSYjVGdkF2d1pTVDU1c00yQ3NqY0lYR0J3S0RmbFptelZUQy9WWHNlRHhrTW5vY1NpWVZwbHh2MlNnbXIxNW9DSGZTemVmdkxCQ2k1TmdvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcwMTM2Njg2CWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKa0tvUWNqNVJoUnRQUDJKTEtRaVExaFVvYWFSYVlhMHpEaGRobVJPMnArZXFSck5UR3R0MTNIR2txQnJlU09ZOG9lM1ZQVlRoeG9kaW94c0ZVSnNLQ3c9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTVEYrMVFvb296T3BHbnkwN1kyV3h2NldlN2w5ZEJFOUo2bXZickgzcWxFUU42M25sYkRnay8rMGJWa1VDY3R6cXBQakNiWUxnUmVkQzVKOHpLd2M3UCthSUFBNkJoekE0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcwMTM2OTk0CWZpbGU6RWRpdG9yIFdvcmtzaG9wLmFwcC50YXIuZ3oKSFRYYUt3dVFac0ZaVXV0cUh0SHZvenZqdG1IMXBRSlcrRHo1dXpndlRzMzNqb2lvbzJwaHRtRVFDclc2cHJFcDVLM2UxK090VDd0RUFFYjVuOGg1Qnc9PQo=",
       "url": "https://myedithub.github.io/Editor-Workshop/Editor.Workshop_0.3.3_x64.app.tar.gz"
     }
   }
