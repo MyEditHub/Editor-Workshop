@@ -154,10 +154,21 @@ jobs:
           ARM64_SIG=$(cat updater/*_arm64.app.tar.gz.sig)
           X64_SIG=$(cat updater/*_x64.app.tar.gz.sig)
 
+          # Extract release notes for this version from changelog.md
+          if [ -f "public/changelog.md" ]; then
+            # Extract section for current version (from ## [version] to next ## [)
+            NOTES=$(awk "/^## \\[${VERSION}\\]/{flag=1; next} /^## \\[/{flag=0} flag" public/changelog.md | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+            if [ -z "$NOTES" ]; then
+              NOTES="See the assets to download this version and install."
+            fi
+          else
+            NOTES="See the assets to download this version and install."
+          fi
+
           cat > updater/latest.json << EOF
           {
             "version": "${VERSION}",
-            "notes": "See the assets to download this version and install.",
+            "notes": "${NOTES}",
             "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "platforms": {
               "darwin-aarch64": {
@@ -180,11 +191,33 @@ jobs:
           publish_dir: ./updater
           keep_files: true
 
+      - name: Read release notes
+        id: release_notes
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          if [ -f "public/changelog.md" ]; then
+            # Extract section for current version (from ## [version] to next ## [)
+            NOTES=$(awk "/^## \\[${VERSION}\\]/{flag=1; next} /^## \\[/{flag=0} flag" public/changelog.md)
+            if [ -n "$NOTES" ]; then
+              echo "notes<<EOF" >> $GITHUB_OUTPUT
+              echo "$NOTES" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            else
+              echo "notes=New release" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "notes=New release" >> $GITHUB_OUTPUT
+          fi
+
       - name: Update Release description
         uses: softprops/action-gh-release@v1
         with:
           name: 'Editor Workshop v${{ steps.version.outputs.VERSION }}'
           body: |
+            ${{ steps.release_notes.outputs.notes }}
+
+            ---
+
             ## Download
 
             | Mac Type | Download |
