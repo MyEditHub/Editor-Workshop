@@ -1007,7 +1007,7 @@ body {
 .file-table th {
   text-align: left;
   padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.2);
+  background: #1a1a1a;
   color: rgba(255, 255, 255, 0.6);
   font-weight: 500;
   font-size: 11px;
@@ -1015,7 +1015,7 @@ body {
   letter-spacing: 0.5px;
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 10;
 }
 
 .file-table td {
@@ -1661,4 +1661,62 @@ body {
 .delete-button:disabled {
   background: rgba(244, 67, 54, 0.3);
   cursor: not-allowed;
+}
+
+/* Source Duplicates - files with same name from different folders */
+.source-duplicate-group {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.source-duplicate-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.source-duplicate-header .duplicate-filename {
+  font-weight: 600;
+}
+
+.source-duplicate-header .duplicate-category {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.source-duplicate-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.source-duplicate-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.source-duplicate-option:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.source-duplicate-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #00bfa5;
+  flex-shrink: 0;
+}
+
+.source-folder-name {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
 import Dashboard from "./components/Dashboard";
 import TheAnvil from "./components/TheAnvil";
 import TheSmelter from "./components/TheSmelter";
@@ -11,20 +12,37 @@ import "./App.css";
 
 type Tab = "dashboard" | "anvil" | "smelter";
 
+// Window sizes for compact launcher behavior
+const COMPACT_SIZE = { width: 600, height: 280 };
+const EXPANDED_SIZE = { width: 1200, height: 800 };
+
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+  const [activeTab, setActiveTab] = useState<Tab | null>(null);
   const [lifetimeCount, setLifetimeCount] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const [analyticsEnabled, setAnalyticsEnabledState] = useState(isAnalyticsEnabled());
   const { changelog, loading: changelogLoading } = useChangelog();
-  const { isChecking, checkForUpdates } = useAutoUpdater();
+  const { isChecking, checkResult, checkForUpdates } = useAutoUpdater();
   const analytics = useAnalytics();
 
   // Track app launch
   useEffect(() => {
     analytics.trackAppLaunched();
   }, []);
+
+  // Resize window based on compact/expanded state
+  useEffect(() => {
+    const resizeWindow = async () => {
+      const win = getCurrentWindow();
+      if (activeTab === null) {
+        await win.setSize(new LogicalSize(COMPACT_SIZE.width, COMPACT_SIZE.height));
+      } else {
+        await win.setSize(new LogicalSize(EXPANDED_SIZE.width, EXPANDED_SIZE.height));
+      }
+    };
+    resizeWindow();
+  }, [activeTab]);
 
   // Track tab changes
   const handleTabChange = (tab: Tab) => {
@@ -110,7 +128,7 @@ function App() {
             <div className="settings-content">
               <div className="settings-section">
                 <h3>About</h3>
-                <p>Editor Workshop v0.3.2</p>
+                <p>Editor Workshop v0.3.3</p>
                 <p>Professional tools for video editors</p>
                 <button
                   className="changelog-button"
@@ -120,6 +138,24 @@ function App() {
                 >
                   {isChecking ? "Checking..." : "Check for Updates"}
                 </button>
+                {checkResult && (
+                  <p
+                    style={{
+                      marginTop: "8px",
+                      fontSize: "13px",
+                      color:
+                        checkResult === "up-to-date"
+                          ? "#4caf50"
+                          : checkResult === "error"
+                          ? "#f44336"
+                          : "#3db8d4",
+                    }}
+                  >
+                    {checkResult === "up-to-date" && "You're up to date!"}
+                    {checkResult === "update-available" && "Update available!"}
+                    {checkResult === "error" && "Failed to check for updates"}
+                  </p>
+                )}
               </div>
 
               <div className="settings-section">
@@ -182,7 +218,7 @@ function App() {
                     margin: 0,
                   }}
                 >
-                  v0.3.2
+                  v0.3.3
                 </p>
               </div>
             </div>
@@ -217,16 +253,20 @@ function App() {
         </button>
       </nav>
 
-      {/* Main Content */}
-      <main className="main-content">
-        {activeTab === "dashboard" && (
-          <Dashboard lifetimeCount={lifetimeCount} />
-        )}
-        {activeTab === "anvil" && (
-          <TheAnvil onUpdateCount={updateLifetimeCount} />
-        )}
-        {activeTab === "smelter" && <TheSmelter />}
-      </main>
+      {/* Main Content - only shown when a tab is selected */}
+      {activeTab !== null && (
+        <main className="main-content">
+          <div style={{ display: activeTab === "dashboard" ? "block" : "none" }}>
+            <Dashboard lifetimeCount={lifetimeCount} />
+          </div>
+          <div style={{ display: activeTab === "anvil" ? "block" : "none" }}>
+            <TheAnvil onUpdateCount={updateLifetimeCount} />
+          </div>
+          <div style={{ display: activeTab === "smelter" ? "block" : "none" }}>
+            <TheSmelter onUpdateCount={updateLifetimeCount} />
+          </div>
+        </main>
+      )}
     </div>
     </ErrorBoundary>
   );

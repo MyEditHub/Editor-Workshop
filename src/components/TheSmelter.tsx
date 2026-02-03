@@ -33,6 +33,18 @@ interface DuplicateInfo {
   category: string;
 }
 
+// Source duplicates: files with same name going to same folder (before organizing)
+interface SourceDuplicateFile {
+  path: string;
+  folder: string;
+}
+
+interface SourceDuplicateGroup {
+  filename: string;
+  category: string;
+  files: SourceDuplicateFile[];
+}
+
 type FileStatus = "pending" | "scanning" | "scanned" | "organizing" | "done" | "error";
 
 interface MusicFile extends AudioMetadata {
@@ -106,9 +118,10 @@ const EditableCell = ({ value, placeholder, onSave, className }: EditableCellPro
 
 interface TheSmelterProps {
   isActive?: boolean;
+  onUpdateCount?: (count: number) => void;
 }
 
-const TheSmelter = ({ isActive = true }: TheSmelterProps) => {
+const TheSmelter = ({ isActive = true, onUpdateCount }: TheSmelterProps) => {
   // State
   const [files, setFiles] = useState<MusicFile[]>([]);
   const [isScanning, setIsScanning] = useState(false);
@@ -126,6 +139,14 @@ const TheSmelter = ({ isActive = true }: TheSmelterProps) => {
   const [showBrowseMenu, setShowBrowseMenu] = useState(false);
   const [showUnknownWarning, setShowUnknownWarning] = useState(false);
   const [isRescanning, setIsRescanning] = useState(false);
+
+  // Source duplicates (files with same name going to same folder)
+  const [sourceDuplicates, setSourceDuplicates] = useState<SourceDuplicateGroup[]>([]);
+  const [showSourceDuplicates, setShowSourceDuplicates] = useState(false);
+  // Map of (filename+category) -> selected path (which file to keep)
+  const [selectedSourceFiles, setSelectedSourceFiles] = useState<Map<string, string>>(new Map());
+  // Files to organize (passed through async flow)
+  const [filesToOrganizeAfterWarning, setFilesToOrganizeAfterWarning] = useState<MusicFile[]>([]);
 
   // Audio playback state
   const [playingFile, setPlayingFile] = useState<string | null>(null);
@@ -440,31 +461,116 @@ const TheSmelter = ({ isActive = true }: TheSmelterProps) => {
     }
   };
 
-  // Check for Unknown files before organizing
-  const handleOrganizeClick = () => {
+  // Check for source duplicates (files with same name going to same folder) before organizing
+  const handleOrganizeClick = async () => {
     if (!outputFolder || files.length === 0) return;
 
-    // If there are Unknown files, show warning first
-    if (unknownFiles.length > 0) {
+    // First check for source duplicates
+    const scannedFiles = files.filter((f) => f.status === "scanned");
+    const preparedFiles = prepareFilesForBackend(scannedFiles, organizeBy);
+
+    try {
+      const groups: SourceDuplicateGroup[] = await invoke("find_source_duplicates", {
+        files: preparedFiles,
+        organizeBy,
+      });
+
+      if (groups.length > 0) {
+        setSourceDuplicates(groups);
+        // Pre-select the first file from each group
+        const initial = new Map<string, string>();
+        for (const group of groups) {
+          const key = `${group.filename}|${group.category}`;
+          initial.set(key, group.files[0].path);
+        }
+        setSelectedSourceFiles(initial);
+        setShowSourceDuplicates(true);
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to check source duplicates:", error);
+    }
+
+    // No source duplicates, continue to Unknown check with current files
+    proceedAfterSourceDuplicates(scannedFiles);
+  };
+
+  // After resolving source duplicates, continue the flow
+  // Pass filesToOrganize explicitly since React state updates are async
+  const proceedAfterSourceDuplicates = (filesToOrganize: MusicFile[]) => {
+    // Check for Unknown files in the files we're organizing
+    const unknownsInBatch = filesToOrganize.filter((f) => {
+      const effective = f.organizeByOverride || organizeBy;
+      const value = effective === "genre" ? f.genre : f.mood;
+      return !value || value === "Unknown";
+    });
+
+    if (unknownsInBatch.length > 0) {
+      // Store files to organize for after the warning
+      setFilesToOrganizeAfterWarning(filesToOrganize);
       setShowUnknownWarning(true);
     } else {
-      checkForDuplicates();
+      checkForDuplicates(filesToOrganize);
     }
+  };
+
+  // Handle source duplicates - remove unselected files and proceed
+  const handleSourceDuplicatesResolved = () => {
+    // Get all paths that should be REMOVED (not selected)
+    const pathsToRemove = new Set<string>();
+    for (const group of sourceDuplicates) {
+      const key = `${group.filename}|${group.category}`;
+      const selectedPath = selectedSourceFiles.get(key);
+      for (const file of group.files) {
+        if (file.path !== selectedPath) {
+          pathsToRemove.add(file.path);
+        }
+      }
+    }
+
+    // Compute filtered files BEFORE updating state
+    const filteredFiles = files.filter((f) => f.status === "scanned" && !pathsToRemove.has(f.path));
+
+    // Remove unselected files from the UI list
+    setFiles((prev) => prev.filter((f) => !pathsToRemove.has(f.path)));
+
+    // Clean up modal state
+    setShowSourceDuplicates(false);
+    setSourceDuplicates([]);
+    setSelectedSourceFiles(new Map());
+
+    // Continue with the filtered files (not relying on state)
+    proceedAfterSourceDuplicates(filteredFiles);
+  };
+
+  // Cancel source duplicate handling
+  const handleCancelSourceDuplicates = () => {
+    setShowSourceDuplicates(false);
+    setSourceDuplicates([]);
+    setSelectedSourceFiles(new Map());
+  };
+
+  // Select which file to keep for a duplicate group
+  const selectSourceFile = (groupKey: string, path: string) => {
+    setSelectedSourceFiles((prev) => {
+      const next = new Map(prev);
+      next.set(groupKey, path);
+      return next;
+    });
   };
 
   // Proceed after Unknown warning
   const proceedWithUnknowns = () => {
     setShowUnknownWarning(false);
-    checkForDuplicates();
+    checkForDuplicates(filesToOrganizeAfterWarning);
   };
 
   // Check for duplicates before organizing
-  const checkForDuplicates = async () => {
-    if (!outputFolder || files.length === 0) return;
+  const checkForDuplicates = async (filesToOrganize: MusicFile[]) => {
+    if (!outputFolder || filesToOrganize.length === 0) return;
 
     try {
-      const scannedFiles = files.filter((f) => f.status === "scanned");
-      const preparedFiles = prepareFilesForBackend(scannedFiles, organizeBy);
+      const preparedFiles = prepareFilesForBackend(filesToOrganize, organizeBy);
       const found: DuplicateInfo[] = await invoke("find_duplicates", {
         files: preparedFiles,
         outputFolder,
@@ -474,15 +580,16 @@ const TheSmelter = ({ isActive = true }: TheSmelterProps) => {
       if (found.length > 0) {
         setDuplicates(found);
         setSelectedDuplicates(new Set(found.map((d) => d.existing_path)));
+        setFilesToOrganizeAfterWarning(filesToOrganize); // Store for after duplicate handling
         setShowDuplicates(true);
       } else {
         // No duplicates, proceed with organizing
-        await doOrganize();
+        await doOrganize(filesToOrganize);
       }
     } catch (error) {
       console.error("Failed to check duplicates:", error);
       // Proceed anyway
-      await doOrganize();
+      await doOrganize(filesToOrganize);
     }
   };
 
@@ -499,14 +606,14 @@ const TheSmelter = ({ isActive = true }: TheSmelterProps) => {
     }
     setShowDuplicates(false);
     setDuplicates([]);
-    await doOrganize();
+    await doOrganize(filesToOrganizeAfterWarning);
   };
 
   // Skip duplicates and organize (will rename files)
   const handleSkipDuplicates = async () => {
     setShowDuplicates(false);
     setDuplicates([]);
-    await doOrganize();
+    await doOrganize(filesToOrganizeAfterWarning);
   };
 
   // Cancel duplicate handling
@@ -539,15 +646,14 @@ const TheSmelter = ({ isActive = true }: TheSmelterProps) => {
   };
 
   // Actually organize files
-  const doOrganize = async () => {
-    if (!outputFolder || files.length === 0) return;
+  const doOrganize = async (filesToOrganize: MusicFile[]) => {
+    if (!outputFolder || filesToOrganize.length === 0) return;
 
     setIsOrganizing(true);
     setResult(null);
 
     try {
-      const scannedFiles = files.filter((f) => f.status === "scanned");
-      const preparedFiles = prepareFilesForBackend(scannedFiles, organizeBy);
+      const preparedFiles = prepareFilesForBackend(filesToOrganize, organizeBy);
       const organizeResult: OrganizeResult = await invoke("organize_files", {
         files: preparedFiles,
         outputFolder,
@@ -560,6 +666,8 @@ const TheSmelter = ({ isActive = true }: TheSmelterProps) => {
       // Track successful organization
       if (organizeResult.success_count > 0) {
         analytics.trackSmelterOrganize(organizeResult.success_count, organizeBy, operation);
+        // Update dashboard statistics
+        onUpdateCount?.(organizeResult.success_count);
       }
 
       // Update file statuses
@@ -573,7 +681,7 @@ const TheSmelter = ({ isActive = true }: TheSmelterProps) => {
       console.error("Failed to organize files:", error);
       setResult({
         success_count: 0,
-        error_count: files.length,
+        error_count: filesToOrganize.length,
         skipped_count: 0,
         errors: [String(error)],
       });
@@ -590,6 +698,9 @@ const TheSmelter = ({ isActive = true }: TheSmelterProps) => {
     setDuplicates([]);
     setShowDuplicates(false);
     setSelectedDuplicates(new Set());
+    setSourceDuplicates([]);
+    setShowSourceDuplicates(false);
+    setSelectedSourceFiles(new Map());
   };
 
   // Remove a single file
@@ -1042,6 +1153,55 @@ const TheSmelter = ({ isActive = true }: TheSmelterProps) => {
               </button>
               <button className="organize-button" onClick={proceedWithUnknowns}>
                 Continue Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Source Duplicates Modal - Files with same name from different folders */}
+      {showSourceDuplicates && sourceDuplicates.length > 0 && (
+        <div className="duplicates-overlay">
+          <div className="duplicates-modal">
+            <h3>Duplicate Filenames Detected</h3>
+            <p className="duplicates-description">
+              You have {sourceDuplicates.length} file{sourceDuplicates.length > 1 ? "s" : ""} with the same name going to the same folder.
+              Select which file to keep from each group.
+            </p>
+
+            <div className="duplicates-list" style={{ maxHeight: "300px" }}>
+              {sourceDuplicates.map((group) => {
+                const groupKey = `${group.filename}|${group.category}`;
+                return (
+                  <div key={groupKey} className="source-duplicate-group">
+                    <div className="source-duplicate-header">
+                      <span className="duplicate-filename">{group.filename}</span>
+                      <span className="duplicate-category">→ {group.category}/</span>
+                    </div>
+                    <div className="source-duplicate-options">
+                      {group.files.map((file) => (
+                        <label key={file.path} className="source-duplicate-option">
+                          <input
+                            type="radio"
+                            name={groupKey}
+                            checked={selectedSourceFiles.get(groupKey) === file.path}
+                            onChange={() => selectSourceFile(groupKey, file.path)}
+                          />
+                          <span className="source-folder-name">from {file.folder}/</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="duplicates-actions">
+              <button className="cancel-button" onClick={handleCancelSourceDuplicates}>
+                Cancel
+              </button>
+              <button className="organize-button" onClick={handleSourceDuplicatesResolved}>
+                Keep Selected & Continue
               </button>
             </div>
           </div>

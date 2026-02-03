@@ -39,3 +39,18 @@ pub struct DuplicateInfo {
     pub existing_path: String,
     pub category: String,
 }
+
+/// A group of source files with the same filename going to the same category
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SourceDuplicateGroup {
+    pub filename: String,
+    pub category: String,
+    pub files: Vec<SourceDuplicateFile>,
+}
+
+/// A file that is part of a duplicate group
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SourceDuplicateFile {
+    pub path: String,
+    pub folder: String, // Parent folder name for display
+}

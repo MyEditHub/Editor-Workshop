@@ -11,6 +11,10 @@
     "dialog:default",
     "fs:default",
     "fs:allow-read",
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "**" }]
+    },
     "updater:default",
     "process:default"
   ]

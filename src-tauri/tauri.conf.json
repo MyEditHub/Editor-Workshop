@@ -1,6 +1,6 @@
 {
   "productName": "Editor Workshop",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "identifier": "com.editors-workshop.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -12,10 +12,10 @@
     "windows": [
       {
         "title": "Editor Workshop",
-        "width": 1200,
-        "height": 800,
-        "minWidth": 800,
-        "minHeight": 600,
+        "width": 600,
+        "height": 280,
+        "minWidth": 500,
+        "minHeight": 250,
         "resizable": true,
         "fullscreen": false,
         "dragDropEnabled": true

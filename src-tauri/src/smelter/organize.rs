@@ -4,7 +4,7 @@ use std::fs;
 use std::io::ErrorKind;
 use std::path::Path;
 
-use super::{AudioMetadata, DuplicateInfo, OrganizeResult};
+use super::{AudioMetadata, DuplicateInfo, OrganizeResult, SourceDuplicateFile, SourceDuplicateGroup};
 
 /// Format a filesystem error with user-friendly messages
 fn format_fs_error(e: &std::io::Error, path: &str, operation: &str) -> String {
@@ -51,29 +51,8 @@ pub fn organize_files(
     let mut used_names: HashMap<String, HashMap<String, u32>> = HashMap::new();
 
     for file in files {
-        // Get the category value for this file
-        // First check for per-file override, then fall back to organize_by
-        let category = if let Some(ref override_cat) = file.category_override {
-            Some(override_cat.clone())
-        } else {
-            match organize_by {
-                "genre" => file.genre.clone(),
-                "mood" => {
-                    // For mood, use the first tag (before comma)
-                    file.mood.as_ref().map(|m| {
-                        m.split(',')
-                            .next()
-                            .unwrap_or("Unknown")
-                            .trim()
-                            .to_string()
-                    })
-                }
-                _ => None,
-            }
-        };
-
-        // Use "Unknown" for files without the category
-        let category = category.unwrap_or_else(|| "Unknown".to_string());
+        // Get the category (handles SFX detection automatically)
+        let category = get_file_category(file, organize_by);
 
         // Sanitize category name for filesystem
         let safe_category = sanitize_folder_name(&category);
@@ -127,6 +106,39 @@ pub fn organize_files(
         skipped_count,
         errors,
     })
+}
+
+/// Check if a file is SFX (not an Epidemic Sound file)
+/// Epidemic Sound files start with "ES_" prefix (case-sensitive)
+fn is_sfx_file(filename: &str) -> bool {
+    !filename.starts_with("ES_")
+}
+
+/// Determine the category for a file, considering SFX detection
+fn get_file_category(file: &AudioMetadata, organize_by: &str) -> String {
+    // SFX files (without ES_ prefix) always go to SFX folder
+    if is_sfx_file(&file.filename) {
+        return "SFX".to_string();
+    }
+
+    // For ES_ files, use normal category resolution
+    let category = if let Some(ref override_cat) = file.category_override {
+        Some(override_cat.clone())
+    } else {
+        match organize_by {
+            "genre" => file.genre.clone(),
+            "mood" => file.mood.as_ref().map(|m| {
+                m.split(',')
+                    .next()
+                    .unwrap_or("Unknown")
+                    .trim()
+                    .to_string()
+            }),
+            _ => None,
+        }
+    };
+
+    category.unwrap_or_else(|| "Unknown".to_string())
 }
 
 /// Sanitize a string for use as a folder name
@@ -204,24 +216,8 @@ pub fn preview_organization(
     let mut preview: HashMap<String, Vec<String>> = HashMap::new();
 
     for file in files {
-        // First check for per-file override, then fall back to organize_by
-        let category = if let Some(ref override_cat) = file.category_override {
-            Some(override_cat.clone())
-        } else {
-            match organize_by {
-                "genre" => file.genre.clone(),
-                "mood" => file.mood.as_ref().map(|m| {
-                    m.split(',')
-                        .next()
-                        .unwrap_or("Unknown")
-                        .trim()
-                        .to_string()
-                }),
-                _ => None,
-            }
-        };
-
-        let category = category.unwrap_or_else(|| "Unknown".to_string());
+        // Get the category (handles SFX detection automatically)
+        let category = get_file_category(file, organize_by);
         let safe_category = sanitize_folder_name(&category);
 
         preview
@@ -243,24 +239,8 @@ pub fn find_duplicates(
     let mut duplicates = Vec::new();
 
     for file in files {
-        // First check for per-file override, then fall back to organize_by
-        let category = if let Some(ref override_cat) = file.category_override {
-            Some(override_cat.clone())
-        } else {
-            match organize_by {
-                "genre" => file.genre.clone(),
-                "mood" => file.mood.as_ref().map(|m| {
-                    m.split(',')
-                        .next()
-                        .unwrap_or("Unknown")
-                        .trim()
-                        .to_string()
-                }),
-                _ => None,
-            }
-        };
-
-        let category = category.unwrap_or_else(|| "Unknown".to_string());
+        // Get the category (handles SFX detection automatically)
+        let category = get_file_category(file, organize_by);
         let safe_category = sanitize_folder_name(&category);
         let target_path = output_path.join(&safe_category).join(&file.filename);
 
@@ -290,4 +270,45 @@ pub fn delete_duplicates(paths: &[String]) -> Result<(u32, Vec<String>), String>
     }
 
     Ok((deleted_count, errors))
+}
+
+/// Find source files with the same filename that would go to the same category folder
+/// Returns groups of duplicates where each group has 2+ files with same name + category
+pub fn find_source_duplicates(
+    files: &[AudioMetadata],
+    organize_by: &str,
+) -> Vec<SourceDuplicateGroup> {
+    // Group files by (filename, category)
+    let mut groups: HashMap<(String, String), Vec<SourceDuplicateFile>> = HashMap::new();
+
+    for file in files {
+        // Get the category (handles SFX detection automatically)
+        let category = get_file_category(file, organize_by);
+        let safe_category = sanitize_folder_name(&category);
+
+        // Get parent folder name for display
+        let folder = Path::new(&file.path)
+            .parent()
+            .and_then(|p| p.file_name())
+            .and_then(|n| n.to_str())
+            .unwrap_or("Unknown")
+            .to_string();
+
+        let key = (file.filename.clone(), safe_category);
+        groups.entry(key).or_default().push(SourceDuplicateFile {
+            path: file.path.clone(),
+            folder,
+        });
+    }
+
+    // Filter to only groups with 2+ files (actual duplicates)
+    groups
+        .into_iter()
+        .filter(|(_, files)| files.len() > 1)
+        .map(|((filename, category), files)| SourceDuplicateGroup {
+            filename,
+            category,
+            files,
+        })
+        .collect()
 }

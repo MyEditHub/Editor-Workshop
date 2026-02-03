@@ -4,7 +4,7 @@
 mod smelter;
 mod telemetry;
 
-use smelter::{AudioMetadata, DuplicateInfo, OrganizeResult};
+use smelter::{AudioMetadata, DuplicateInfo, OrganizeResult, SourceDuplicateGroup};
 use std::collections::HashMap;
 
 // ============ The Smelter Commands ============
@@ -104,6 +104,15 @@ async fn find_duplicates(
 #[tauri::command]
 async fn delete_duplicates(paths: Vec<String>) -> Result<(u32, Vec<String>), String> {
     smelter::organize::delete_duplicates(&paths)
+}
+
+/// Find source files with same filename going to same category (before organizing)
+#[tauri::command]
+async fn find_source_duplicates(
+    files: Vec<AudioMetadata>,
+    organize_by: String,
+) -> Vec<SourceDuplicateGroup> {
+    smelter::organize::find_source_duplicates(&files, &organize_by)
 }
 
 /// Rescan files - clears cache for specified files and re-reads metadata
@@ -220,6 +229,7 @@ fn main() {
             clear_metadata_cache,
             find_duplicates,
             delete_duplicates,
+            find_source_duplicates,
             rescan_files,
             queue_telemetry_event,
             get_pending_telemetry,

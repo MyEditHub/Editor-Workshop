@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { FileIcon, CheckCircle, AlertCircle } from '../icons';
 import { useAnalytics } from '../hooks/useAnalytics';
 
@@ -30,7 +31,72 @@ const TheAnvil = ({ onUpdateCount }: TheAnvilProps) => {
   const [targetVersion, setTargetVersion] = useState('43');
   const [processedFiles, setProcessedFiles] = useState<ProcessedFile[]>([]);
   const [showVersionList, setShowVersionList] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const analytics = useAnalytics();
+
+  // Set up Tauri native drag-drop listener
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+
+    const setupDragDrop = async () => {
+      const window = getCurrentWindow();
+      unlisten = await window.onDragDropEvent(async (event) => {
+        if (event.payload.type === 'enter') {
+          setDragOver(true);
+        } else if (event.payload.type === 'leave') {
+          setDragOver(false);
+        } else if (event.payload.type === 'drop') {
+          setDragOver(false);
+          const paths = event.payload.paths;
+
+          // Filter for .prproj files
+          const prprojPaths = paths.filter((p) =>
+            p.toLowerCase().endsWith('.prproj')
+          );
+
+          if (prprojPaths.length > 0) {
+            analytics.trackAnvilFilesAdded(prprojPaths.length);
+
+            // Convert paths to File objects by reading them
+            const filePromises = prprojPaths.map(async (path) => {
+              const filename = path.split('/').pop() || path;
+              // We need to read the file using Tauri's fs plugin
+              const { readFile } = await import('@tauri-apps/plugin-fs');
+              const contents = await readFile(path);
+              const blob = new Blob([contents]);
+              const file = new File([blob], filename);
+              // Store the original path for reference
+              (file as File & { originalPath?: string }).originalPath = path;
+              return file;
+            });
+
+            try {
+              const droppedFiles = await Promise.all(filePromises);
+              setFiles((prev) => [
+                ...prev,
+                ...droppedFiles.map((f) => ({
+                  file: f,
+                  status: 'pending' as const,
+                  currentVersion: null,
+                  error: null,
+                })),
+              ]);
+            } catch (error) {
+              console.error('Error reading dropped files:', error);
+            }
+          }
+        }
+      });
+    };
+
+    setupDragDrop();
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, [analytics]);
 
   const versionMap: VersionMap[] = [
     { version: '1', year: '2018', name: 'CC 2018 (12.0)' },
@@ -57,25 +123,6 @@ const TheAnvil = ({ onUpdateCount }: TheAnvilProps) => {
     const stream = new Blob([text]).stream().pipeThrough(cs);
     const compressed = await new Response(stream).arrayBuffer();
     return new Uint8Array(compressed);
-  };
-
-  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const droppedFiles = Array.from(e.dataTransfer.files).filter((file) =>
-      file.name.endsWith('.prproj')
-    );
-    if (droppedFiles.length > 0) {
-      analytics.trackAnvilFilesAdded(droppedFiles.length);
-    }
-    setFiles((prev) => [
-      ...prev,
-      ...droppedFiles.map((f) => ({
-        file: f,
-        status: 'pending' as const,
-        currentVersion: null,
-        error: null,
-      })),
-    ]);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -355,12 +402,10 @@ const TheAnvil = ({ onUpdateCount }: TheAnvilProps) => {
         )}
       </div>
 
-      {/* Drop Zone */}
+      {/* Drop Zone - Tauri native drag-drop handles the actual drop via onDragDropEvent */}
       {files.length === 0 && (
         <div
-          className="anvil-drop-zone"
-          onDrop={handleFileDrop}
-          onDragOver={(e) => e.preventDefault()}
+          className={`anvil-drop-zone ${dragOver ? 'drag-over' : ''}`}
         >
           <FileIcon className="drop-zone-icon" />
           <p className="drop-zone-text">Drag & drop .prproj files here</p>

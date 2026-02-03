@@ -3,12 +3,6 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ lifetimeCount }: DashboardProps) => {
-  // Available tools
-  const tools = [
-    { name: 'The Anvil', description: 'Premiere Pro Project Upgrader', status: 'active' },
-    { name: 'The Smelter', description: 'Music Library Organizer', status: 'active' }
-  ];
-
   return (
     <div className="dashboard">
       {/* Welcome Section */}
@@ -36,26 +30,6 @@ const Dashboard = ({ lifetimeCount }: DashboardProps) => {
             <div className="stat-label">Success Rate</div>
             <div className="stat-sublabel">Completed tasks</div>
           </div>
-        </div>
-      </section>
-
-      {/* Available Tools */}
-      <section className="tools-section">
-        <h3 className="section-title">Available Tools</h3>
-        <div className="tools-list">
-          {tools.map((tool, index) => (
-            <div key={index} className="tool-item">
-              <div className="tool-info">
-                <div className="tool-name">{tool.name}</div>
-                <div className="tool-description">{tool.description}</div>
-              </div>
-              <div className="tool-status">
-                <span className={`status-badge ${tool.status}`}>
-                  {tool.status}
-                </span>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -88,7 +62,7 @@ const Dashboard = ({ lifetimeCount }: DashboardProps) => {
       </section>
 
       <footer style={{ textAlign: 'center', marginTop: '32px', color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>
-        v0.3.2
+        v0.3.3
       </footer>
     </div>
   );
